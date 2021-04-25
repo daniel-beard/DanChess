@@ -14,6 +14,16 @@ class BoardNode: SKNode {
     private var pieces = Array2D<Piece>(cols: 8, rows: 8, defaultValues: nil)
     let squareSize: Int
 
+    /// Game Properties
+    var turn: TeamColor = .white
+    var whiteCanCastleQueenside = true
+    var whiteCanCastleKingside = true
+    var blackCanCastleQueenside = true
+    var blackCanCastleKingside = true
+    var enpassantTarget: (rank: Rank, file: File)? = nil
+    var halfMoveClock = 0
+    var fullMoveClock = 0
+
     required init?(coder aDecoder: NSCoder) {
         squareSize = 32
         super.init(coder: aDecoder)
@@ -40,6 +50,7 @@ class BoardNode: SKNode {
                            width: squareSize,
                            height: squareSize))
                 square.fillColor = (file + rank) % 2 != 0 ? light : dark
+                square.isUserInteractionEnabled = false
                 addChild(square)
                 squares[rank, file] = square
                 print("Rank: \(rank) file: \(file)")
@@ -83,52 +94,97 @@ class BoardNode: SKNode {
             "P": [.pawn, .white],
         ]
 
-        var rank: Rank = .eight
-        var file: File = .a
-        var finishedPlacingBoard = false
-        for char in fenString {
-            if char == " " {
-                finishedPlacingBoard = true
-                break
-            }
-            if char.isNumber, let number = Int(String(char)) {
-                file = (file + (number - 1)) ?? .a
-                continue
-            }
-            if char == "/" {
-                rank = (rank - 1) ?? .one
-                file = .a
-                continue
-            }
-            let piece = pieceMapping[String(char)]!
-            pieces[rank, file] = piece
-            let sprite = pieceSprite(for: piece)!
-            addChild(sprite)
-            sprite.position = CGPoint(x: (file.rawValue - 1) * squareSize + squareSize / 2, y: (rank.rawValue - 1) * squareSize + squareSize / 2)
-            file = (file + 1) ?? .a
+        enum ParseState: Int {
+            case boardPositions = 1
+            case activeColor
+            case castingAvailability
+            case enpassantTarget
+            case halfMoveClock
+            case fullMoveClock
         }
 
-//        // Setup initial pieces
-//        //White pieces
-//        pieces[.one, .a] = [.rook, .white]
-//        pieces[.one, .b] = [.knight, .white]
-//        pieces[.one, .c] = [.bishop, .white]
-//        pieces[.one, .d] = [.queen, .white]
-//        pieces[.one, .e] = [.king, .white]
-//        pieces[.one, .f] = [.bishop, .white]
-//        pieces[.one, .g] = [.knight, .white]
-//        pieces[.one, .h] = [.rook, .white]
-//        pieces[.two, .a] = [.pawn, .white]
-//        pieces[.two, .b] = [.pawn, .white]
-//        for x in 0..<pieces.cols {
-//            for y in 0..<pieces.rows {
-//                if let piece = pieces[x, y] {
-//                    let sprite = pieceSprite(for: piece)!
-//                    addChild(sprite)
-//                    sprite.position = CGPoint(x: x * squareSize + squareSize / 2, y: y * squareSize + squareSize / 2)
-//                    print(squares[x, y]!.position)
-//                }
-//            }
-//        }
-    }
+        var parseState: ParseState = .boardPositions
+        var rank: Rank = .eight
+        var file: File = .a
+        let stringParts = fenString.split(separator: " ")
+        if stringParts.count != 6 {
+            fatalError("FEN string looks incorrect, does not have required parts")
+        }
+        for char in fenString {
+            if char == " " {
+                parseState = ParseState(rawValue: parseState.rawValue + 1)!
+                continue
+            }
+            switch parseState {
+                case .boardPositions:
+                    if char.isNumber, let number = Int(String(char)) {
+                        file = (file + (number)) ?? .a
+                        continue
+                    }
+                    if char == "/" {
+                        rank = (rank - 1) ?? .one
+                        file = .a
+                        continue
+                    }
+                    let piece = pieceMapping[String(char)]!
+                    pieces[rank, file] = piece
+                    let sprite = pieceSprite(for: piece)!
+                    let (pieceName, color) = pieceDesc(for: piece)
+                    sprite.name = "piece:\(pieceName),\(color)"
+                    addChild(sprite)
+                    sprite.position = CGPoint(x: (file.rawValue - 1) * squareSize + squareSize / 2, y: (rank.rawValue - 1) * squareSize + squareSize / 2)
+                    file = (file + 1) ?? .a
+                case .activeColor:
+                    print("In active color with: \(char)")
+                    if char == "w" { turn = .white }
+                    else if char == "b" { turn = .black }
+                    else { fatalError("Unknown next turn color: \(char)") }
+                case .castingAvailability:
+                    if char == "-" {
+                        whiteCanCastleKingside = false
+                        whiteCanCastleQueenside = false
+                        blackCanCastleKingside = false
+                        blackCanCastleQueenside = false
+                    } else if char == "k" {
+                        blackCanCastleKingside = true
+                    } else if char == "q" {
+                        blackCanCastleQueenside = true
+                    } else if char == "K" {
+                        whiteCanCastleKingside = true
+                    } else if char == "Q" {
+                        whiteCanCastleQueenside = true
+                    } else {
+                        fatalError("Unknown casting availability char: \(char)")
+                    }
+                case .enpassantTarget:
+                    let part = stringParts.suffix(3).first!
+                    print("In enpassantTarget with: \(part)")
+                    if part == "-" {
+                        enpassantTarget = nil
+                    } else {
+                        guard part.count == 2 else { fatalError("Invalid enpassant target value: \(part)") }
+                        let rankString = String(part.first!)
+                        let fileString = String(part.last!)
+                        enpassantTarget = (Rank(rankString)!, File(fileString)!)
+                    }
+                case .halfMoveClock:
+                    let part = stringParts.suffix(2).first!
+                    print("In halfMoveClock with: \(part)")
+                    halfMoveClock = Int(String(part)) ?? 0
+                case .fullMoveClock:
+                    let part = stringParts.suffix(1).joined()
+                    print("In fullMoveClock with: \(part)")
+                    fullMoveClock = Int(part) ?? 0
+            } // switch
+        } // for
+        // Debug
+        print("Active color: \(turn)")
+        print("Castling: White Queenside: \(whiteCanCastleQueenside)")
+        print("Castling: White Kingside: \(whiteCanCastleKingside)")
+        print("Castling: Black Queenside: \(blackCanCastleQueenside)")
+        print("Castling: Black Kingside: \(blackCanCastleKingside)")
+        print("Enpassant target? \(String(describing: enpassantTarget))")
+        print("Half move clock: \(halfMoveClock)")
+        print("Full move clock: \(fullMoveClock)")
+    } // func
 }

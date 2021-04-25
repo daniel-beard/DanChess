@@ -9,27 +9,21 @@
 import SpriteKit
 
 class GameScene: SKScene {
-    
-    
-    fileprivate var label : SKLabelNode?
-    fileprivate var spinnyNode : SKShapeNode?
 
-    
+    private var selectedPiece: SKSpriteNode?
+
     class func newGameScene() -> GameScene {
         // Load 'GameScene.sks' as an SKScene.
         guard let scene = SKScene(fileNamed: "GameScene") as? GameScene else {
             print("Failed to load GameScene.sks")
             abort()
         }
-        
-        // Set the scale mode to scale to fit the window
         scene.scaleMode = .aspectFill
-        
         return scene
     }
     
     func setUpScene() {
-        let boardNode = BoardNode(frame: self.frame)
+        let boardNode = BoardNode(frame: self.frame, fenString: "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
         addChild(boardNode)
         boardNode.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
     }
@@ -68,6 +62,10 @@ extension GameScene {
 extension GameScene {
 
     override func mouseDown(with event: NSEvent) {
+        let location = event.location(in: self)
+        let touchedNodes = nodes(at: location)
+        let firstTouchedNode = atPoint(location).name
+        print(firstTouchedNode)
     }
     
     override func mouseDragged(with event: NSEvent) {

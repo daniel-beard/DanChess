@@ -11,7 +11,7 @@ import SpriteKit
 
 struct Piece: OptionSet, CustomDebugStringConvertible {
     var debugDescription: String {
-        let (pieceName, color) = name(for: self)
+        let (pieceName, color) = pieceDesc(for: self)
         return "\(pieceName), \(color)"
     }
 
@@ -39,6 +39,14 @@ enum Rank: Int {
     case seven
     case eight
 
+    init?(_ string: String) {
+        guard string.count == 1 else { fatalError("Init with string only takes a single character") }
+        if let raw = Int(string), let rank = Rank(rawValue: raw) {
+            self = rank
+        }
+        return nil
+    }
+
     static func +(rank: Rank, rhs: Int) -> Rank? {
         return Rank(rawValue: rank.rawValue + rhs)
     }
@@ -57,6 +65,21 @@ enum File: Int {
     case g
     case h
 
+    init?(_ string: String) {
+        guard string.count == 1 else { fatalError("Init with string only takes a single character") }
+        switch string {
+            case "a": self = .a
+            case "b": self = .b
+            case "c": self = .c
+            case "d": self = .d
+            case "e": self = .e
+            case "f": self = .f
+            case "g": self = .g
+            case "h": self = .h
+            default: return nil
+        }
+    }
+
     static func +(file: File, rhs: Int) -> File? {
         return File(rawValue: file.rawValue + rhs)
     }
@@ -65,9 +88,12 @@ enum File: Int {
     }
 }
 
+enum TeamColor: Int {
+    case white = 8
+    case black = 16
+}
 
-
-func name(for piece: Piece) -> (pieceName: String, color: String) {
+func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
     var pieceName = ""
     var color = ""
     if piece.contains(.white) { color = "White" }
@@ -82,6 +108,6 @@ func name(for piece: Piece) -> (pieceName: String, color: String) {
 }
 
 func pieceSprite(for piece: Piece) -> SKSpriteNode? {
-    let (pieceName, color) = name(for: piece)
+    let (pieceName, color) = pieceDesc(for: piece)
     return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
 }
