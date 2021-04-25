@@ -22,6 +22,12 @@
 		2486F62F262D13F900648688 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F608262D13F600648688 /* GameScene.swift */; };
 		2486F630262D13F900648688 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2486F609262D13F900648688 /* Assets.xcassets */; };
 		2486F631262D13F900648688 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2486F609262D13F900648688 /* Assets.xcassets */; };
+		2486F63C262D154300648688 /* BoardNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63B262D154300648688 /* BoardNode.swift */; };
+		2486F63D262D154300648688 /* BoardNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63B262D154300648688 /* BoardNode.swift */; };
+		2486F63F262D193600648688 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63E262D193600648688 /* Array2D.swift */; };
+		2486F640262D193600648688 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63E262D193600648688 /* Array2D.swift */; };
+		2486F6422634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
+		2486F6432634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +46,9 @@
 		2486F624262D13F900648688 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		2486F627262D13F900648688 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		2486F629262D13F900648688 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2486F63B262D154300648688 /* BoardNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardNode.swift; sourceTree = "<group>"; };
+		2486F63E262D193600648688 /* Array2D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
+		2486F6412634E1FD00648688 /* Piece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Piece.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +82,7 @@
 		2486F605262D13F600648688 /* DanChess Shared */ = {
 			isa = PBXGroup;
 			children = (
+				2486F63A262D152800648688 /* UI */,
 				2486F606262D13F600648688 /* Actions.sks */,
 				2486F607262D13F600648688 /* GameScene.sks */,
 				2486F608262D13F600648688 /* GameScene.swift */,
@@ -111,6 +121,16 @@
 				2486F629262D13F900648688 /* Info.plist */,
 			);
 			path = "DanChess macOS";
+			sourceTree = "<group>";
+		};
+		2486F63A262D152800648688 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				2486F63B262D154300648688 /* BoardNode.swift */,
+				2486F63E262D193600648688 /* Array2D.swift */,
+				2486F6412634E1FD00648688 /* Piece.swift */,
+			);
+			path = UI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -218,9 +238,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2486F63C262D154300648688 /* BoardNode.swift in Sources */,
 				2486F62E262D13F900648688 /* GameScene.swift in Sources */,
+				2486F6422634E1FD00648688 /* Piece.swift in Sources */,
 				2486F614262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F612262D13F900648688 /* AppDelegate.swift in Sources */,
+				2486F63F262D193600648688 /* Array2D.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,9 +251,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2486F63D262D154300648688 /* BoardNode.swift in Sources */,
 				2486F62F262D13F900648688 /* GameScene.swift in Sources */,
+				2486F6432634E1FD00648688 /* Piece.swift in Sources */,
 				2486F625262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F623262D13F900648688 /* AppDelegate.swift in Sources */,
+				2486F640262D193600648688 /* Array2D.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
