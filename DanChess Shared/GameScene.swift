@@ -10,7 +10,8 @@ import SpriteKit
 
 class GameScene: SKScene {
 
-    private var selectedPiece: SKSpriteNode?
+    fileprivate var board: BoardNode!
+    fileprivate var selectedPiece: SKSpriteNode?
 
     class func newGameScene() -> GameScene {
         // Load 'GameScene.sks' as an SKScene.
@@ -23,9 +24,9 @@ class GameScene: SKScene {
     }
     
     func setUpScene() {
-        let boardNode = BoardNode(frame: self.frame, fenString: "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
-        addChild(boardNode)
-        boardNode.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
+        board = BoardNode(frame: self.frame, fenString: "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        addChild(board)
+        board.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
     }
 
     override func didMove(to view: SKView) {
@@ -66,6 +67,11 @@ extension GameScene {
         let touchedNodes = nodes(at: location)
         let firstTouchedNode = atPoint(location).name
         print(firstTouchedNode)
+        let boardPosition = event.location(in: board)
+        if let (rank, file) = board.rankAndFile(for: boardPosition) {
+            print("Found! \(file)\(rank)")
+            board.displayPossibleMoves(forPieceAt: rank, file: file)
+        }
     }
     
     override func mouseDragged(with event: NSEvent) {

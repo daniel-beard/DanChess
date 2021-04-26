@@ -28,6 +28,8 @@
 		2486F640262D193600648688 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63E262D193600648688 /* Array2D.swift */; };
 		2486F6422634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
 		2486F6432634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
+		2486F6482636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
+		2486F6492636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +51,7 @@
 		2486F63B262D154300648688 /* BoardNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardNode.swift; sourceTree = "<group>"; };
 		2486F63E262D193600648688 /* Array2D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
 		2486F6412634E1FD00648688 /* Piece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Piece.swift; sourceTree = "<group>"; };
+		2486F6472636660500648688 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +132,7 @@
 				2486F63B262D154300648688 /* BoardNode.swift */,
 				2486F63E262D193600648688 /* Array2D.swift */,
 				2486F6412634E1FD00648688 /* Piece.swift */,
+				2486F6472636660500648688 /* Extensions.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -244,6 +248,7 @@
 				2486F614262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F612262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F63F262D193600648688 /* Array2D.swift in Sources */,
+				2486F6482636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +262,7 @@
 				2486F625262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F623262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F640262D193600648688 /* Array2D.swift in Sources */,
+				2486F6492636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

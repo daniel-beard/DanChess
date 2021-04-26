@@ -19,17 +19,17 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
     typealias RawValue = Int
 
     static let pawn = Piece(rawValue: 1)
-    static let rook = Piece(rawValue: 2)
-    static let knight = Piece(rawValue: 3)
-    static let bishop = Piece(rawValue: 4)
-    static let queen = Piece(rawValue: 5)
-    static let king = Piece(rawValue: 6)
+    static let rook = Piece(rawValue: 1 << 2)
+    static let knight = Piece(rawValue: 1 << 3)
+    static let bishop = Piece(rawValue: 1 << 4)
+    static let queen = Piece(rawValue: 1 << 5)
+    static let king = Piece(rawValue: 1 << 6)
 
-    static let white = Piece(rawValue: 8)
-    static let black = Piece(rawValue: 16)
+    static let white = Piece(rawValue: 1 << 7)
+    static let black = Piece(rawValue: 1 << 8)
 }
 
-enum Rank: Int {
+enum Rank: Int, CustomDebugStringConvertible {
     case one = 1
     case two
     case three
@@ -47,6 +47,8 @@ enum Rank: Int {
         return nil
     }
 
+    var debugDescription: String { "\(self.rawValue)" }
+
     static func +(rank: Rank, rhs: Int) -> Rank? {
         return Rank(rawValue: rank.rawValue + rhs)
     }
@@ -55,7 +57,8 @@ enum Rank: Int {
     }
 }
 
-enum File: Int {
+enum File: Int, CustomDebugStringConvertible {
+
     case a = 1
     case b
     case c
@@ -80,6 +83,19 @@ enum File: Int {
         }
     }
 
+    var debugDescription: String {
+        switch self {
+            case .a: return "a"
+            case .b: return "b"
+            case .c: return "c"
+            case .d: return "d"
+            case .e: return "e"
+            case .f: return "f"
+            case .g: return "g"
+            case .h: return "h"
+        }
+    }
+
     static func +(file: File, rhs: Int) -> File? {
         return File(rawValue: file.rawValue + rhs)
     }
@@ -89,8 +105,8 @@ enum File: Int {
 }
 
 enum TeamColor: Int {
-    case white = 8
-    case black = 16
+    case white = 128
+    case black = 256
 }
 
 func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
