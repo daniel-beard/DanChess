@@ -48,6 +48,17 @@ class Array2D<T> {
         }
     }
 
+    subscript(p: Position) -> T? {
+        get{
+            let idx = size * Int(p.rank.rawValue - 1) + Int(p.file.rawValue - 1)
+            return matrix[idx]
+        }
+        set{
+            let idx = (size * Int(p.rank.rawValue - 1) + Int(p.file.rawValue - 1))
+            matrix[idx] = newValue
+        }
+    }
+
     subscript(index: Int) -> T? {
         get{
             return matrix[index]

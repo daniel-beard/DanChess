@@ -27,6 +27,11 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
 
     static let white = Piece(rawValue: 1 << 7)
     static let black = Piece(rawValue: 1 << 8)
+
+    func color() -> TeamColor {
+        if self.contains(.white) { return .white }
+        return .black
+    }
 }
 
 enum Rank: Int, CustomDebugStringConvertible {
@@ -126,4 +131,34 @@ func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
 func pieceSprite(for piece: Piece) -> SKSpriteNode? {
     let (pieceName, color) = pieceDesc(for: piece)
     return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
+}
+
+struct Position {
+    let rank: Rank
+    let file: File
+
+    init(nonOptionalRank: Rank, nonOptionalFile: File) {
+        self.rank = nonOptionalRank
+        self.file = nonOptionalFile
+    }
+
+    init(_ rank: Rank, _ file: File) {
+        self.rank = rank
+        self.file = file
+    }
+
+    init?(_ rank: Rank?, _ file: File?) {
+        guard let rank = rank, let file = file else { return nil }
+        self.rank = rank
+        self.file = file
+    }
+
+    // Create new position by adding offsets to current rank & file values.
+    // Returns nil if the position is not valid for rank or file.
+    func offset(by r: Int, _ f: Int) -> Position? {
+        if let newRank = Rank(rawValue: rank.rawValue + r), let newFile = File(rawValue: file.rawValue + f) {
+            return Position(newRank, newFile)
+        }
+        return nil
+    }
 }

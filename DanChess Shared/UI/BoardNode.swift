@@ -8,8 +8,6 @@
 
 import SpriteKit
 
-typealias BoardPos = (rank: Rank, file: File)
-
 class BoardNode: SKNode {
 
     private var squares = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
@@ -62,7 +60,7 @@ class BoardNode: SKNode {
     }
 
     // Takes point in this nodes coord space
-    public func rankAndFile(for p: CGPoint) -> (Rank, File)? {
+    public func position(forUIPosition p: CGPoint) -> Position? {
         let rank: Rank?
         let file: File?
         let s = CGFloat(squareSize)
@@ -86,21 +84,19 @@ class BoardNode: SKNode {
         else if p.y > s * 6 && p.y <= s * 7 { rank = .seven }
         else if p.y > s * 7 && p.y <= s * 8 { rank = .eight }
         else { rank = nil }
-        if rank == nil || file == nil { return nil }
-        return (rank!, file!)
+        return Position(rank, file)
     }
 
     private func moveOverlaySprite() -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
         square.name = "overlay"
-        let color = SKColor(deviceRed: 190/255, green: 37/255, blue: 109/255, alpha: 0.6)
+        let color = SKColor(deviceRed: 190/255, green: 37/255, blue: 109/255, alpha: 1)
         square.fillColor = color
-//        square.alpha = 0.6
         return square
     }
 
-    public func displayPossibleMoves(forPieceAt rank: Rank, file: File) {
-        let possibles = possibleMoves(forPieceAt: rank, file: file)
+    public func displayPossibleMoves(forPieceAt position: Position) {
+        let possibles = possibleMoves(forPieceAt: position)
 
         // remove existing overlays
         enumerateChildNodes(withName: "overlay") { (node, stop) in
@@ -113,41 +109,48 @@ class BoardNode: SKNode {
             let sprite = moveOverlaySprite()
             sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
                                       y: (p.rank.rawValue - 1) * squareSize)
-            squaresOverlay[rank, file] = sprite
+            squaresOverlay[p] = sprite
             addChild(sprite)
         }
     }
 
-    public func possibleMoves(forPieceAt rank: Rank, file: File) -> [(rank: Rank, file: File)] {
+    //TODO: An approach here would be to 'paint' the lines of check onces per move
+    // That way, we'll save on some of the calculations like for the kings moves or check calculations
+    public func possibleMoves(forPieceAt pos: Position) -> [Position] {
 
         // Get the piece, if there isn't one, there are no moves to return
-        guard let piece = pieces[rank, file] else { return [] }
+        guard let piece = pieces[pos] else { return [] }
         let white = piece.contains(.white)
+        let currColor = piece.color()
 
-        var potentialMoves: [(rank: Rank?, file: File?)] = []
+        var potentialMoves: [Position?] = []
 
         // Now we need to define some types of moves per piece type
         // remember, some pieces can only move in certain directions per color.
         if piece.contains(.pawn) {
+            let rankOffset = white ? 1 : -1
             // Can move forward if that position is not taken
-            let nextRank = Rank(rawValue: rank.rawValue + (white ? 1 : -1))
-            let forwardMove = (rank: nextRank, file: file)
-            if let r = forwardMove.rank, pieces[r, file] == nil {
-                potentialMoves.append((r, file))
+            let forwardMove = pos.offset(by: rankOffset, 0)
+            if let forwardMove = forwardMove, pieces[forwardMove] == nil {
+                potentialMoves.append(forwardMove)
             }
             // Can take on forward left iff there's a piece there
             // Note, this is forward 'stage' left
             //TODO: Need to check colors are different
-            let forwardLeftMove = (rank: nextRank, file: File(rawValue: file.rawValue - 1))
-            if let r = forwardLeftMove.rank, let f = forwardLeftMove.file, let p = pieces[r, f] {
-                potentialMoves.append((r, f))
+            let forwardLeftMove = pos.offset(by: rankOffset, -1)
+            if let forwardLeftMove = forwardLeftMove,
+                let p = pieces[forwardLeftMove],
+                currColor != p.color() {
+                potentialMoves.append(forwardLeftMove)
             }
             // Can take on forward right iff there's a piece there
             // Note, this is forward 'stage' right
             //TODO: Need to check colors are different
-            let forwardRightMove = (rank: nextRank, file: File(rawValue: file.rawValue + 1))
-            if let r = forwardRightMove.rank, let f = forwardRightMove.file, pieces[r, f] != nil {
-                potentialMoves.append((r, f))
+            let forwardRightMove = pos.offset(by: rankOffset, 1)
+            if let forwardRightMove = forwardRightMove,
+                let p = pieces[forwardRightMove],
+                currColor != p.color() {
+                potentialMoves.append(forwardRightMove)
             }
             print(potentialMoves)
             // Enpassant
@@ -173,7 +176,7 @@ class BoardNode: SKNode {
         }
 
         // Finally, filter out any invalid moves
-        return potentialMoves.filter { $0 != nil && $1 != nil } as! [(Rank, File)]
+        return potentialMoves.compactMap { $0 }
     }
 
     private func setupPieces(with fenString: String) {

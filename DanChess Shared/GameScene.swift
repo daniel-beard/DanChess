@@ -68,9 +68,9 @@ extension GameScene {
         let firstTouchedNode = atPoint(location).name
         print(firstTouchedNode)
         let boardPosition = event.location(in: board)
-        if let (rank, file) = board.rankAndFile(for: boardPosition) {
-            print("Found! \(file)\(rank)")
-            board.displayPossibleMoves(forPieceAt: rank, file: file)
+        if let position = board.position(forUIPosition: boardPosition) {
+            print("Found! \(position)")
+            board.displayPossibleMoves(forPieceAt: position)
         }
     }
     
