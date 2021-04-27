@@ -114,6 +114,7 @@ class BoardNode: SKNode {
         }
     }
 
+    //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
     //TODO: An approach here would be to 'paint' the lines of check onces per move
     // That way, we'll save on some of the calculations like for the kings moves or check calculations
     public func possibleMoves(forPieceAt pos: Position) -> [Position] {
@@ -156,27 +157,67 @@ class BoardNode: SKNode {
             // Enpassant
             //TODO
         } else if piece.contains(.rook) {
-            //TODO
+            let offsets = [(1,0),(-1,0),(0,1),(0,-1)]
+            potentialMoves.append(contentsOf: offsets.map {
+                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            }.flatMap { $0 })
+            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.knight) {
-            //TODO
+            let offsets = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
+            potentialMoves.append(contentsOf: offsets.map {
+                if let next = pos.offset(by: $0.0, $0.1), pieces[next]?.color() != currColor {
+                    return next
+                }
+                return nil
+            })
+            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.bishop) {
-            //TODO
+            let offsets = [(1,1),(1,-1),(-1,-1),(-1,1)]
+            potentialMoves.append(contentsOf: offsets.map {
+                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            }.flatMap { $0 })
+            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.queen) {
-            //TODO
+            let offsets = [(1,0),(1,1),(-1,0),(0,0),(0,1),(0,-1),(-1,-1)]
+            potentialMoves.append(contentsOf: offsets.map {
+                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            }.flatMap { $0 })
+            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.king) {
-            let ranksOffsets = [-1, 0, 1]
-            let fileOffsets = [-1, 0, 1]
-            let candidates = zip(ranksOffsets, fileOffsets)
-                .map { (Rank(rawValue: $0), File(rawValue: $1)) }
-                .filter { $0 != nil && $1 != nil } as! [(Rank, File)]
+            let offsets = [(1,0),(1,1),(-1,0),(0,0),(0,1),(0,-1),(-1,-1)]
+            potentialMoves.append(contentsOf: offsets.map {
+                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
+            }.flatMap { $0 })
             // We can move anywhere that doesn't take us into check
             // And castling is a thing
             //TODO
 
         }
-
-        // Finally, filter out any invalid moves
         return potentialMoves.compactMap { $0 }
+    }
+
+    // Returns potential moves as an array along a movement line 'offset'
+    // Will include an enemy player if this movement line leads to a taking move.
+    // Set maxLength to a smaller value to control the maximum movement line length
+    private func movementLine(from position: Position, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
+        let ourColor = pieces[position]?.color()
+        var line = [Position]()
+        var currPos = position
+        while true {
+            if line.count >= maxLength { break }
+            guard let next = currPos.offset(by: rankOffset, fileOffset) else { break }
+            // Is there a piece at next
+            if let nextPiece = pieces[next] {
+                if nextPiece.color() != ourColor {
+                    line.append(next)
+                }
+                break
+            } else {
+                line.append(next)
+            }
+            currPos = next
+        }
+        return line
     }
 
     private func setupPieces(with fenString: String) {
