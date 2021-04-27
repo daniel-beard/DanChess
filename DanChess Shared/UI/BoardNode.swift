@@ -54,7 +54,6 @@ class BoardNode: SKNode {
                 square.isUserInteractionEnabled = false
                 addChild(square)
                 squares[rank, file] = square
-                print("Rank: \(rank) file: \(file)")
             }
         }
     }
@@ -87,6 +86,10 @@ class BoardNode: SKNode {
         return Position(rank, file)
     }
 
+    public func uiPosition(forBoardPosition pos: Position) -> CGPoint {
+        return CGPoint(x: (pos.file.rawValue - 1) * squareSize + squareSize / 2, y: (pos.rank.rawValue - 1) * squareSize + squareSize / 2)
+    }
+
     private func moveOverlaySprite() -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
         square.name = "overlay"
@@ -95,15 +98,24 @@ class BoardNode: SKNode {
         return square
     }
 
-    public func displayPossibleMoves(forPieceAt position: Position) {
-        let possibles = possibleMoves(forPieceAt: position)
-
-        // remove existing overlays
+    private func removeExistingMoveOverlays() {
         enumerateChildNodes(withName: "overlay") { (node, stop) in
             node.removeFromParent()
         }
         // reset overlays array
         squaresOverlay = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
+    }
+
+    public func displayPossibleMoves(forPieceAt position: Position) {
+        removeExistingMoveOverlays()
+
+        // if it's not this colors turn, skip generating the moves
+        if pieces[position]?.color() != turn {
+            return
+        }
+
+        let possibles = possibleMoves(forPieceAt: position)
+
         // add new overlays
         for p in possibles {
             let sprite = moveOverlaySprite()
@@ -112,6 +124,29 @@ class BoardNode: SKNode {
             squaresOverlay[p] = sprite
             addChild(sprite)
         }
+    }
+
+    public func canPickupPiece(at pos: Position) -> Bool {
+        return pieces[pos]?.color() == turn
+    }
+
+    public func canMove(from start: Position, to end: Position) -> Bool {
+        let possibles = possibleMoves(forPieceAt: start)
+        return possibles.contains(end)
+    }
+
+    public func makeMove(from start: Position, to end: Position) {
+        // Need to remove existing enemy piece from UI, if there is one.
+        // Filter to any that are pieces whos name does NOT contain our current color
+        self.nodes(at: uiPosition(forBoardPosition: end))
+            .filter { $0.name?.starts(with: "piece") ?? false && $0.name?.hasSuffix(turn.stringValue) == false }
+            .forEach { $0.removeFromParent() }
+
+        let piece = pieces[start]
+        pieces[end] = piece
+        pieces[start] = nil
+        turn = turn == .white ? .black : .white
+        removeExistingMoveOverlays()
     }
 
     //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
@@ -136,8 +171,6 @@ class BoardNode: SKNode {
                 potentialMoves.append(forwardMove)
             }
             // Can take on forward left iff there's a piece there
-            // Note, this is forward 'stage' left
-            //TODO: Need to check colors are different
             let forwardLeftMove = pos.offset(by: rankOffset, -1)
             if let forwardLeftMove = forwardLeftMove,
                 let p = pieces[forwardLeftMove],
@@ -145,16 +178,17 @@ class BoardNode: SKNode {
                 potentialMoves.append(forwardLeftMove)
             }
             // Can take on forward right iff there's a piece there
-            // Note, this is forward 'stage' right
-            //TODO: Need to check colors are different
             let forwardRightMove = pos.offset(by: rankOffset, 1)
             if let forwardRightMove = forwardRightMove,
                 let p = pieces[forwardRightMove],
                 currColor != p.color() {
                 potentialMoves.append(forwardRightMove)
             }
-            print(potentialMoves)
+            // Double move on first position
+            //TODO
             // Enpassant
+            //TODO
+            // Exchange pieces
             //TODO
         } else if piece.contains(.rook) {
             let offsets = [(1,0),(-1,0),(0,1),(0,-1)]
@@ -178,7 +212,7 @@ class BoardNode: SKNode {
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.queen) {
-            let offsets = [(1,0),(1,1),(-1,0),(0,0),(0,1),(0,-1),(-1,-1)]
+            let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
             potentialMoves.append(contentsOf: offsets.map {
                 movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
@@ -296,7 +330,7 @@ class BoardNode: SKNode {
                     let (pieceName, color) = pieceDesc(for: piece)
                     sprite.name = "piece:\(pieceName),\(color)"
                     addChild(sprite)
-                    sprite.position = CGPoint(x: (file.rawValue - 1) * squareSize + squareSize / 2, y: (rank.rawValue - 1) * squareSize + squareSize / 2)
+                    sprite.position = uiPosition(forBoardPosition: Position(rank, file))
                     file = (file + 1) ?? .a
                 case .activeColor:
                     print("In active color with: \(char)")
@@ -322,7 +356,6 @@ class BoardNode: SKNode {
                     }
                 case .enpassantTarget:
                     let part = stringParts.suffix(3).first!
-                    print("In enpassantTarget with: \(part)")
                     if part == "-" {
                         enpassantTarget = nil
                     } else {
@@ -333,22 +366,11 @@ class BoardNode: SKNode {
                     }
                 case .halfMoveClock:
                     let part = stringParts.suffix(2).first!
-                    print("In halfMoveClock with: \(part)")
                     halfMoveClock = Int(String(part)) ?? 0
                 case .fullMoveClock:
                     let part = stringParts.suffix(1).joined()
-                    print("In fullMoveClock with: \(part)")
                     fullMoveClock = Int(part) ?? 0
             } // switch
         } // for
-        // Debug
-        print("Active color: \(turn)")
-        print("Castling: White Queenside: \(whiteCanCastleQueenside)")
-        print("Castling: White Kingside: \(whiteCanCastleKingside)")
-        print("Castling: Black Queenside: \(blackCanCastleQueenside)")
-        print("Castling: Black Kingside: \(blackCanCastleKingside)")
-        print("Enpassant target? \(String(describing: enpassantTarget))")
-        print("Half move clock: \(halfMoveClock)")
-        print("Full move clock: \(fullMoveClock)")
     } // func
 }

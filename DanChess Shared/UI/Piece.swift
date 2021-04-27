@@ -112,6 +112,13 @@ enum File: Int, CustomDebugStringConvertible {
 enum TeamColor: Int {
     case white = 128
     case black = 256
+
+    var stringValue: String {
+        switch self {
+            case .white: return "White"
+            case .black: return "Black"
+        }
+    }
 }
 
 func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
@@ -133,7 +140,7 @@ func pieceSprite(for piece: Piece) -> SKSpriteNode? {
     return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
 }
 
-struct Position {
+struct Position: Equatable {
     let rank: Rank
     let file: File
 

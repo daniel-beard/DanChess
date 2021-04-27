@@ -11,7 +11,9 @@ import SpriteKit
 class GameScene: SKScene {
 
     fileprivate var board: BoardNode!
-    fileprivate var selectedPiece: SKSpriteNode?
+    fileprivate var selectedPiece: SKNode?
+    fileprivate var selectedPieceStartUIPosition: CGPoint?
+    fileprivate var selectedPieceStartBoardPosition: Position?
 
     class func newGameScene() -> GameScene {
         // Load 'GameScene.sks' as an SKScene.
@@ -64,20 +66,40 @@ extension GameScene {
 
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
-        let touchedNodes = nodes(at: location)
-        let firstTouchedNode = atPoint(location).name
-        print(firstTouchedNode)
-        let boardPosition = event.location(in: board)
-        if let position = board.position(forUIPosition: boardPosition) {
-            print("Found! \(position)")
+        let firstTouchedNode = atPoint(location)
+        let boardPoint = event.location(in: board)
+        if let position = board.position(forUIPosition: boardPoint) {
             board.displayPossibleMoves(forPieceAt: position)
+            if board.canPickupPiece(at: position) && firstTouchedNode.name?.starts(with: "piece") ?? false {
+                selectedPiece = firstTouchedNode
+                selectedPieceStartUIPosition = selectedPiece?.position
+                selectedPieceStartBoardPosition = position
+            }
         }
     }
     
     override func mouseDragged(with event: NSEvent) {
+        let boardPosition = event.location(in: board)
+        selectedPiece?.position = boardPosition
     }
     
     override func mouseUp(with event: NSEvent) {
+        guard let startBoardPos = selectedPieceStartBoardPosition,
+            let startPoint = selectedPieceStartUIPosition else { return }
+        let boardPoint = event.location(in: board)
+        if let nextBoardPos = board.position(forUIPosition: boardPoint) {
+            if board.canMove(from: startBoardPos, to: nextBoardPos) {
+                // make move
+                board.makeMove(from: startBoardPos, to: nextBoardPos)
+                selectedPiece?.run(SKAction.move(to: board.uiPosition(forBoardPosition: nextBoardPos), duration: 0.1))
+            } else {
+                // animate back to starting point
+                selectedPiece?.run(SKAction.move(to: startPoint, duration: 0.3))
+            }
+        }
+        selectedPiece = nil
+        selectedPieceStartBoardPosition = nil
+        selectedPieceStartUIPosition = nil
     }
 
 }
