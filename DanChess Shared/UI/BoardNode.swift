@@ -170,6 +170,14 @@ class BoardNode: SKNode {
             if let forwardMove = forwardMove, pieces[forwardMove] == nil {
                 potentialMoves.append(forwardMove)
             }
+            // Can jump by 2 if haven't moved yet, and there isn't a piece in the way
+            let forwardMoveTwo = forwardMove?.offset(by: rankOffset, 0)
+            if let forwardMoveTwo = forwardMoveTwo,
+                    pieces[forwardMove] == nil &&
+                    pieces[forwardMoveTwo] == nil &&
+                    pos.rank == (white ? .two : .seven) {
+                potentialMoves.append(forwardMoveTwo)
+            }
             // Can take on forward left iff there's a piece there
             let forwardLeftMove = pos.offset(by: rankOffset, -1)
             if let forwardLeftMove = forwardLeftMove,

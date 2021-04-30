@@ -59,6 +59,16 @@ class Array2D<T> {
         }
     }
 
+    subscript(p: Position?) -> T? {
+        get {
+            if let p = p { return self[p] }
+            return nil
+        }
+        set {
+            if let p = p { self[p] = newValue }
+        }
+    }
+
     subscript(index: Int) -> T? {
         get{
             return matrix[index]
