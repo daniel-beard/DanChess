@@ -188,17 +188,15 @@ class BoardNode: SKNode {
         // remember, some pieces can only move in certain directions per color.
         if piece.contains(.pawn) {
             let rankOffset = white ? 1 : -1
+            let homeRank: Rank = (white ? .two : .seven)
             // Can move forward if that position is not taken
             let forwardMove = pos.offset(by: rankOffset, 0)
-            if let forwardMove = forwardMove, pieces[forwardMove] == nil {
+            if isEmpty(forwardMove) {
                 potentialMoves.append(forwardMove)
             }
             // Double move from first position if there aren't pieces in the way
             let forwardMoveTwo = forwardMove?.offset(by: rankOffset, 0)
-            if let forwardMoveTwo = forwardMoveTwo,
-                    pieces[forwardMove] == nil &&
-                    pieces[forwardMoveTwo] == nil &&
-                    pos.rank == (white ? .two : .seven) {
+            if isEmpty(forwardMove) && isEmpty(forwardMoveTwo) && pos.rank == homeRank {
                 potentialMoves.append(forwardMoveTwo)
             }
             // Can take on forward left iff there's a piece there
@@ -249,14 +247,13 @@ class BoardNode: SKNode {
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.king) {
-            let offsets = [(1,0),(1,1),(-1,0),(0,0),(0,1),(0,-1),(-1,-1)]
+            let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
             potentialMoves.append(contentsOf: offsets.map {
                 movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
             }.flatMap { $0 })
             // We can move anywhere that doesn't take us into check
             // And castling is a thing
             //TODO
-
         }
         return potentialMoves.compactMap { $0 }
     }
@@ -293,6 +290,11 @@ class BoardNode: SKNode {
     private func isPawn(_ pos: Position?) -> Bool {
         guard let pos = pos else { return false }
         return pieces[pos]?.contains(.pawn) ?? false
+    }
+
+    private func isEmpty(_ pos: Position?) -> Bool {
+        guard let pos = pos else { return true }
+        return pieces[pos] == nil
     }
 
     private func setupPieces(with fenString: String) {
