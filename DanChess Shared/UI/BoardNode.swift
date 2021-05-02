@@ -21,7 +21,7 @@ class BoardNode: SKNode {
     var whiteCanCastleKingside = true
     var blackCanCastleQueenside = true
     var blackCanCastleKingside = true
-    var enpassantTarget: (rank: Rank, file: File)? = nil
+    var enpassantTarget: Position? = nil
     var halfMoveClock = 0
     var fullMoveClock = 0
 
@@ -135,18 +135,41 @@ class BoardNode: SKNode {
         return possibles.contains(end)
     }
 
+    public func removeNode(at position: Position?) {
+        if let position = position {
+            self.nodes(at: uiPosition(forBoardPosition: position))
+                .filter { $0.name?.starts(with: "piece") ?? false }
+                .forEach { $0.removeFromParent() }
+        }
+    }
+
     public func makeMove(from start: Position, to end: Position) {
         // Need to remove existing enemy piece from UI, if there is one.
         // Filter to any that are pieces whos name does NOT contain our current color
         self.nodes(at: uiPosition(forBoardPosition: end))
             .filter { $0.name?.starts(with: "piece") ?? false && $0.name?.hasSuffix(turn.stringValue) == false }
             .forEach { $0.removeFromParent() }
+        let moveColor = turn
 
         let piece = pieces[start]
         pieces[end] = piece
         pieces[start] = nil
-        turn = turn == .white ? .black : .white
+        turn = moveColor.toggle()
         removeExistingMoveOverlays()
+
+        // Handle enpassant
+        if isPawn(piece) && end == enpassantTarget {
+            let rankOffset = moveColor == .white ? -1 : 1
+            let positionToRemove = end.offset(by: rankOffset, 0)
+            removeNode(at: positionToRemove)
+            pieces[positionToRemove] = nil
+        }
+        enpassantTarget = nil
+
+        // Set enpassant target
+        if isPawn(piece) && abs(end.rank.rawValue - start.rank.rawValue) == 2 {
+            enpassantTarget = start.offset(by: moveColor == .white ? 1 : -1, 0)
+        }
     }
 
     //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
@@ -170,7 +193,7 @@ class BoardNode: SKNode {
             if let forwardMove = forwardMove, pieces[forwardMove] == nil {
                 potentialMoves.append(forwardMove)
             }
-            // Can jump by 2 if haven't moved yet, and there isn't a piece in the way
+            // Double move from first position if there aren't pieces in the way
             let forwardMoveTwo = forwardMove?.offset(by: rankOffset, 0)
             if let forwardMoveTwo = forwardMoveTwo,
                     pieces[forwardMove] == nil &&
@@ -192,12 +215,12 @@ class BoardNode: SKNode {
                 currColor != p.color() {
                 potentialMoves.append(forwardRightMove)
             }
-            // Double move on first position
-            //TODO
             // Enpassant
-            //TODO
-            // Exchange pieces
-            //TODO
+            if let enpassantTarget = enpassantTarget, [forwardLeftMove, forwardRightMove].contains(enpassantTarget) {
+                potentialMoves.append(enpassantTarget == forwardLeftMove ? forwardLeftMove : forwardRightMove)
+            }
+            //TODO Exchange pieces
+            //TODO Check
         } else if piece.contains(.rook) {
             let offsets = [(1,0),(-1,0),(0,1),(0,-1)]
             potentialMoves.append(contentsOf: offsets.map {
@@ -260,6 +283,16 @@ class BoardNode: SKNode {
             currPos = next
         }
         return line
+    }
+
+    private func isPawn(_ piece: Piece?) -> Bool {
+        guard let piece = piece else { return false }
+        return piece.contains(.pawn)
+    }
+
+    private func isPawn(_ pos: Position?) -> Bool {
+        guard let pos = pos else { return false }
+        return pieces[pos]?.contains(.pawn) ?? false
     }
 
     private func setupPieces(with fenString: String) {
@@ -370,7 +403,7 @@ class BoardNode: SKNode {
                         guard part.count == 2 else { fatalError("Invalid enpassant target value: \(part)") }
                         let rankString = String(part.first!)
                         let fileString = String(part.last!)
-                        enpassantTarget = (Rank(rankString)!, File(fileString)!)
+                        enpassantTarget = Position(Rank(rankString)!, File(fileString)!)
                     }
                 case .halfMoveClock:
                     let part = stringParts.suffix(2).first!

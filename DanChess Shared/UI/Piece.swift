@@ -119,6 +119,10 @@ enum TeamColor: Int {
             case .black: return "Black"
         }
     }
+
+    func toggle() -> TeamColor {
+        return self == .white ? .black : .white
+    }
 }
 
 func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
