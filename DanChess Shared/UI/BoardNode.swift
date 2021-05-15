@@ -170,6 +170,8 @@ class BoardNode: SKNode {
         if isPawn(piece) && abs(end.rank.rawValue - start.rank.rawValue) == 2 {
             enpassantTarget = start.offset(by: moveColor == .white ? 1 : -1, 0)
         }
+
+       //TODO: Set castling rules after moves
     }
 
     //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
@@ -182,52 +184,51 @@ class BoardNode: SKNode {
         let white = piece.contains(.white)
         let currColor = piece.color()
 
-        var potentialMoves: [Position?] = []
+        var moves: [Position?] = []
 
         // Now we need to define some types of moves per piece type
         // remember, some pieces can only move in certain directions per color.
         if piece.contains(.pawn) {
             let rankOffset = white ? 1 : -1
             let homeRank: Rank = (white ? .two : .seven)
+            let forward = pos.offset(by: rankOffset, 0)
+            let forwardTwo = forward?.offset(by: rankOffset, 0)
+            let forwardLeft = pos.offset(by: rankOffset, -1)
+            let forwardRight = pos.offset(by: rankOffset, 1)
+
             // Can move forward if that position is not taken
-            let forwardMove = pos.offset(by: rankOffset, 0)
-            if isEmpty(forwardMove) {
-                potentialMoves.append(forwardMove)
+            if isEmpty(forward) {
+                moves.append(forward)
             }
             // Double move from first position if there aren't pieces in the way
-            let forwardMoveTwo = forwardMove?.offset(by: rankOffset, 0)
-            if isEmpty(forwardMove) && isEmpty(forwardMoveTwo) && pos.rank == homeRank {
-                potentialMoves.append(forwardMoveTwo)
+            if isEmpty(forward) && isEmpty(forwardTwo) && pos.rank == homeRank {
+                moves.append(forwardTwo)
             }
             // Can take on forward left iff there's a piece there
-            let forwardLeftMove = pos.offset(by: rankOffset, -1)
-            if let forwardLeftMove = forwardLeftMove,
-                let p = pieces[forwardLeftMove],
+            if let p = pieces[forwardLeft],
                 currColor != p.color() {
-                potentialMoves.append(forwardLeftMove)
+                moves.append(forwardLeft)
             }
             // Can take on forward right iff there's a piece there
-            let forwardRightMove = pos.offset(by: rankOffset, 1)
-            if let forwardRightMove = forwardRightMove,
-                let p = pieces[forwardRightMove],
+            if let p = pieces[forwardRight],
                 currColor != p.color() {
-                potentialMoves.append(forwardRightMove)
+                moves.append(forwardRight)
             }
             // Enpassant
-            if let enpassantTarget = enpassantTarget, [forwardLeftMove, forwardRightMove].contains(enpassantTarget) {
-                potentialMoves.append(enpassantTarget == forwardLeftMove ? forwardLeftMove : forwardRightMove)
+            if let enpassantTarget = enpassantTarget, [forwardLeft, forwardRight].contains(enpassantTarget) {
+                moves.append(enpassantTarget == forwardLeft ? forwardLeft : forwardRight)
             }
             //TODO Exchange pieces
             //TODO Check
         } else if piece.contains(.rook) {
             let offsets = [(1,0),(-1,0),(0,1),(0,-1)]
-            potentialMoves.append(contentsOf: offsets.map {
-                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: offsets.map {
+                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.knight) {
             let offsets = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
-            potentialMoves.append(contentsOf: offsets.map {
+            moves.append(contentsOf: offsets.map {
                 if let next = pos.offset(by: $0.0, $0.1), pieces[next]?.color() != currColor {
                     return next
                 }
@@ -236,32 +237,32 @@ class BoardNode: SKNode {
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.bishop) {
             let offsets = [(1,1),(1,-1),(-1,-1),(-1,1)]
-            potentialMoves.append(contentsOf: offsets.map {
-                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: offsets.map {
+                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.queen) {
             let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-            potentialMoves.append(contentsOf: offsets.map {
-                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: offsets.map {
+                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.king) {
             let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-            potentialMoves.append(contentsOf: offsets.map {
-                movementLine(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
-            }.flatMap { $0 })
+            moves.append(contentsOf: offsets.map {
+                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
+            }.flatMap{ $0 })
             // We can move anywhere that doesn't take us into check
             // And castling is a thing
             //TODO
         }
-        return potentialMoves.compactMap { $0 }
+        return moves.compactMap { $0 }
     }
 
     // Returns potential moves as an array along a movement line 'offset'
     // Will include an enemy player if this movement line leads to a taking move.
     // Set maxLength to a smaller value to control the maximum movement line length
-    private func movementLine(from position: Position, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
+    private func ray(from position: Position, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
         let ourColor = pieces[position]?.color()
         var line = [Position]()
         var currPos = position

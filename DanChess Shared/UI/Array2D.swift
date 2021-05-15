@@ -78,6 +78,14 @@ class Array2D<T> {
         }
     }
 
+    func collect(_ p: Position?...) -> [T?] {
+        var result = [T?]()
+        for pos in p {
+            result.append(self[pos])
+        }
+        return result
+    }
+
     func colCount() -> Int { size }
     func rowCount() -> Int { size }
 
