@@ -54,6 +54,15 @@ class BoardNode: SKNode {
                 square.isUserInteractionEnabled = false
                 addChild(square)
                 squares[rank, file] = square
+
+                // position labels for debug
+                let f = File(rawValue: file + 1)!
+                let r = Rank(rawValue: rank + 1)!
+                let l = SKLabelNode(text: "\(f.debugDescription)\(r.debugDescription)")
+                l.fontSize = 20
+                l.fontColor = .black
+                addChild(l)
+                l.position = uiPosition(forBoardPosition: Position(r, f)!)
             }
         }
     }
@@ -171,7 +180,46 @@ class BoardNode: SKNode {
             enpassantTarget = start.offset(by: moveColor == .white ? 1 : -1, 0)
         }
 
-       //TODO: Set castling rules after moves
+        // Handle castling
+        if isKing(piece) && moveColor == .white {
+            if end == Position(.one, .c) && whiteCanCastleQueenside {
+                castleRookMove(start: Position(.one, .a), end: Position(.one, .d))
+            }
+            if end == Position(.one, .g) && whiteCanCastleKingside {
+                castleRookMove(start: Position(.one, .h), end: Position(.one, .f))
+            }
+            whiteCanCastleQueenside = false
+            whiteCanCastleKingside = false
+        }
+        if isKing(piece) && moveColor == .black {
+            if end == Position(.eight, .c) && blackCanCastleQueenside {
+                castleRookMove(start: Position(.eight, .a), end: Position(.eight, .d))
+            }
+            if end == Position(.eight, .g) && blackCanCastleKingside {
+                castleRookMove(start: Position(.eight, .h), end: Position(.eight, .f))
+            }
+            blackCanCastleQueenside = false
+            blackCanCastleKingside = false
+        }
+
+        // Set castling rules after move for rooks
+        if isRook(piece) && moveColor == .white {
+            if start == Position(.one, .a) { whiteCanCastleQueenside = false }
+            if start == Position(.one, .h) { whiteCanCastleKingside = false }
+        }
+        if isRook(piece) && moveColor == .black {
+            if start == Position(.eight, .a) { blackCanCastleQueenside = false }
+            if start == Position(.eight, .h) { blackCanCastleKingside = false }
+        }
+    }
+
+    private func castleRookMove(start: Position, end: Position) {
+        let rook = pieces[start]
+        pieces[end] = rook
+        pieces[start] = nil
+        guard let node = nodes(at: uiPosition(forBoardPosition: start))
+                .filter({ $0.name?.starts(with: "piece") ?? false }).first else { return }
+        node.position = uiPosition(forBoardPosition: end)
     }
 
     //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
@@ -252,9 +300,35 @@ class BoardNode: SKNode {
             moves.append(contentsOf: offsets.map {
                 ray(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
             }.flatMap{ $0 })
+            // Handle castling
+            if turn == .white {
+                let kingHome = Position(.one, .e)
+                if pos == kingHome {
+                    // Can castle queenside if no one on d1 or c1 and eligible
+                    if whiteCanCastleQueenside && pieces[.one, .d] == nil && pieces[.one, .c] == nil {
+                        moves.append(Position(.one, .c))
+                    }
+                    // Can castle kingside if no one on f1 or g1 and eligible
+                    if whiteCanCastleKingside && pieces[.one, .f] == nil && pieces[.one, .g] == nil {
+                        moves.append(Position(.one, .g))
+                    }
+                }
+            } else {
+                let kingHome = Position(.eight, .e)
+                if pos == kingHome {
+                    // Can castle queenside if no one on d8 or c8 and eligible
+                    if blackCanCastleQueenside && pieces[.eight, .d] == nil && pieces[.eight, .c] == nil {
+                        moves.append(Position(.eight, .c))
+                    }
+                    // Can castle kingside if no one on f8 or g8 and eligible
+                    if blackCanCastleKingside && pieces[.eight, .f] == nil && pieces[.eight, .g] == nil {
+                        moves.append(Position(.eight, .g))
+                    }
+                }
+            }
+
             // We can move anywhere that doesn't take us into check
-            // And castling is a thing
-            //TODO
+            // TODO
         }
         return moves.compactMap { $0 }
     }
@@ -284,19 +358,34 @@ class BoardNode: SKNode {
     }
 
     private func isPawn(_ piece: Piece?) -> Bool {
-        guard let piece = piece else { return false }
-        return piece.contains(.pawn)
+        return piece?.contains(.pawn) ?? false
     }
 
     private func isPawn(_ pos: Position?) -> Bool {
-        guard let pos = pos else { return false }
         return pieces[pos]?.contains(.pawn) ?? false
     }
 
+    private func isRook(_ piece: Piece?) -> Bool {
+        return piece?.contains(.rook) ?? false
+    }
+
+    private func isRook(_ pos: Position?) -> Bool {
+        return pieces[pos]?.contains(.rook) ?? false
+    }
+
+    private func isKing(_ piece: Piece?) -> Bool {
+        return piece?.contains(.king) ?? false
+    }
+
+    private func isKing(_ pos: Position?) -> Bool {
+        return pieces[pos]?.contains(.king) ?? false
+    }
+
     private func isEmpty(_ pos: Position?) -> Bool {
-        guard let pos = pos else { return true }
         return pieces[pos] == nil
     }
+
+    //TODO: Implement a board -> FEN string function
 
     private func setupPieces(with fenString: String) {
         /**
@@ -368,6 +457,7 @@ class BoardNode: SKNode {
                         file = .a
                         continue
                     }
+
                     let piece = pieceMapping[String(char)]!
                     pieces[rank, file] = piece
                     let sprite = pieceSprite(for: piece)!
@@ -375,6 +465,7 @@ class BoardNode: SKNode {
                     sprite.name = "piece:\(pieceName),\(color)"
                     addChild(sprite)
                     sprite.position = uiPosition(forBoardPosition: Position(rank, file))
+
                     file = (file + 1) ?? .a
                 case .activeColor:
                     print("In active color with: \(char)")
