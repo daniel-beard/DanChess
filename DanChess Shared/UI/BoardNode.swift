@@ -357,35 +357,15 @@ class BoardNode: SKNode {
         return line
     }
 
-    private func isPawn(_ piece: Piece?) -> Bool {
-        return piece?.contains(.pawn) ?? false
-    }
+    private func isPawn(_ piece: Piece?) -> Bool { piece?.contains(.pawn) ?? false }
+    private func isPawn(_ pos: Position?) -> Bool { pieces[pos]?.contains(.pawn) ?? false }
+    private func isRook(_ piece: Piece?) -> Bool { piece?.contains(.rook) ?? false }
+    private func isRook(_ pos: Position?) -> Bool { pieces[pos]?.contains(.rook) ?? false }
+    private func isKing(_ piece: Piece?) -> Bool { piece?.contains(.king) ?? false }
+    private func isKing(_ pos: Position?) -> Bool { pieces[pos]?.contains(.king) ?? false }
+    private func isEmpty(_ pos: Position?) -> Bool { pieces[pos] == nil }
 
-    private func isPawn(_ pos: Position?) -> Bool {
-        return pieces[pos]?.contains(.pawn) ?? false
-    }
-
-    private func isRook(_ piece: Piece?) -> Bool {
-        return piece?.contains(.rook) ?? false
-    }
-
-    private func isRook(_ pos: Position?) -> Bool {
-        return pieces[pos]?.contains(.rook) ?? false
-    }
-
-    private func isKing(_ piece: Piece?) -> Bool {
-        return piece?.contains(.king) ?? false
-    }
-
-    private func isKing(_ pos: Position?) -> Bool {
-        return pieces[pos]?.contains(.king) ?? false
-    }
-
-    private func isEmpty(_ pos: Position?) -> Bool {
-        return pieces[pos] == nil
-    }
-
-    //TODO: Implement a board -> FEN string function
+    //TODO: Implement a board -> FEN string function, then the load / save just becomes these two methods
 
     private func setupPieces(with fenString: String) {
         /**
