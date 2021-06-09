@@ -3,10 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		242821B4266DD0C800EE2BCD /* SwiftParsec in Frameworks */ = {isa = PBXBuildFile; productRef = 242821B3266DD0C800EE2BCD /* SwiftParsec */; };
+		242821B6266DD10F00EE2BCD /* FENStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENStrings.swift */; };
+		242821B7266DD10F00EE2BCD /* FENStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENStrings.swift */; };
 		2486F612262D13F900648688 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F611262D13F900648688 /* AppDelegate.swift */; };
 		2486F614262D13F900648688 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F613262D13F900648688 /* GameViewController.swift */; };
 		2486F617262D13F900648688 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2486F615262D13F900648688 /* Main.storyboard */; };
@@ -33,6 +36,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		242821B5266DD10F00EE2BCD /* FENStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENStrings.swift; sourceTree = "<group>"; };
 		2486F606262D13F600648688 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		2486F607262D13F600648688 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
 		2486F608262D13F600648688 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -66,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				242821B4266DD0C800EE2BCD /* SwiftParsec in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -133,6 +138,7 @@
 				2486F63E262D193600648688 /* Array2D.swift */,
 				2486F6412634E1FD00648688 /* Piece.swift */,
 				2486F6472636660500648688 /* Extensions.swift */,
+				242821B5266DD10F00EE2BCD /* FENStrings.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -170,6 +176,9 @@
 			dependencies = (
 			);
 			name = "DanChess macOS";
+			packageProductDependencies = (
+				242821B3266DD0C800EE2BCD /* SwiftParsec */,
+			);
 			productName = "DanChess macOS";
 			productReference = 2486F620262D13F900648688 /* DanChess.app */;
 			productType = "com.apple.product-type.application";
@@ -201,6 +210,9 @@
 				Base,
 			);
 			mainGroup = 2486F600262D13F600648688;
+			packageReferences = (
+				242821B2266DD0C800EE2BCD /* XCRemoteSwiftPackageReference "SwiftParsec" */,
+			);
 			productRefGroup = 2486F60F262D13F900648688 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -248,6 +260,7 @@
 				2486F614262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F612262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F63F262D193600648688 /* Array2D.swift in Sources */,
+				242821B6266DD10F00EE2BCD /* FENStrings.swift in Sources */,
 				2486F6482636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -262,6 +275,7 @@
 				2486F625262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F623262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F640262D193600648688 /* Array2D.swift in Sources */,
+				242821B7266DD10F00EE2BCD /* FENStrings.swift in Sources */,
 				2486F6492636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -517,6 +531,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		242821B2266DD0C800EE2BCD /* XCRemoteSwiftPackageReference "SwiftParsec" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:davedufresne/SwiftParsec.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		242821B3266DD0C800EE2BCD /* SwiftParsec */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 242821B2266DD0C800EE2BCD /* XCRemoteSwiftPackageReference "SwiftParsec" */;
+			productName = SwiftParsec;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2486F601262D13F600648688 /* Project object */;
 }

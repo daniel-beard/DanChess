@@ -41,6 +41,10 @@ class BoardNode: SKNode {
     }
 
     private func setupSquares() {
+
+        // just for testing
+        fenstrings()
+        
         let light = SKColor(deviceRed: 235 / 255, green: 215/255, blue: 185/255, alpha: 1)
         let dark = SKColor(deviceRed: 175 / 255, green: 135 / 255, blue: 105 / 255, alpha: 1)
         for file in 0..<8 {
