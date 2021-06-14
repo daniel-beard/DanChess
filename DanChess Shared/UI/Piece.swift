@@ -32,6 +32,21 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
         if self.contains(.white) { return .white }
         return .black
     }
+
+    static func fromFen(char: Character) -> Piece? {
+        let color = char.isUppercase ? white : black
+        let piece: Piece
+        switch char.lowercased() {
+            case "p": piece = .pawn
+            case "r": piece = .rook
+            case "n": piece = .knight
+            case "b": piece = .bishop
+            case "q": piece = .queen
+            case "k": piece = .king
+            default: return nil
+        }
+        return [piece, color]
+    }
 }
 
 enum Rank: Int, CustomDebugStringConvertible {
@@ -48,8 +63,9 @@ enum Rank: Int, CustomDebugStringConvertible {
         guard string.count == 1 else { fatalError("Init with string only takes a single character") }
         if let raw = Int(string), let rank = Rank(rawValue: raw) {
             self = rank
+        } else {
+            return nil
         }
-        return nil
     }
 
     var debugDescription: String { "\(self.rawValue)" }
@@ -162,6 +178,14 @@ struct Position: Equatable {
         guard let rank = rank, let file = file else { return nil }
         self.rank = rank
         self.file = file
+    }
+
+    static func fromFen(string: String) -> Position? {
+        guard string.count == 2 else { return nil }
+        guard string != "-" else { return nil }
+        let rank = String(string.first!)
+        let file = String(string.last!)
+        return Position(Rank(rank), File(file))
     }
 
     // Create new position by adding offsets to current rank & file values.

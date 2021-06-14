@@ -34,11 +34,11 @@ enum FENParts {
     case piecePlacement([[Character]])
     case activeColor(TeamColor)
     case castlingAvailability([Character])
-    case enpassantTarget
+    case enpassantTarget(Position?)
     case halfmoveClock(Int?)
     case fullmoveClock(Int?)
 
-    public static let parser: GenericParser<String, (), [FENParts]> = {
+    public static let parser: GenericParser<String, (), [FENParts?]> = {
 
         // Definitions + Setup
         let fen = LanguageDefinition<()>.empty
@@ -70,13 +70,45 @@ enum FENParts {
         let castling =
             FENParts.castlingAvailability <^>
             (StringParser.oneOf("kqKQ").many <|> (symbol("-") *> GenericParser(result: ["-"])))
+            <* lexer.whiteSpace <?> "castling availability"
 
-        var result = [FENParts]()
+        // Enpassant target
+        // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+        // e.g. e3                                            ^
+        let rank = StringParser.oneOf("12345678")
+        let file = StringParser.oneOf("abcdefgh")
+        let position: GenericParser<String, (), Position?> = file >>- { f in
+            rank >>- { r in
+                return just(Position(Rank(String(r)), File(String(f))))
+            }
+        }
+        let enpassantTarget = FENParts.enpassantTarget <^>
+            (position <|>
+                (symbol("-") *> just(nil) ))
+            <* lexer.whiteSpace.optional <?> "enpassant target"
 
-        return GenericParser.lift3({ [$0, $1, $2] }, parser1: placements, parser2: activeTeamColor, parser3: castling)
+        // Move clocks
+        // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+        //                                                      ^-^
+        let halfMove = FENParts.halfmoveClock <^>
+            StringParser.digit.many1.stringValue.map { Int($0) }
+            <* lexer.whiteSpace.optional <?> "half move clock"
+
+        let fullMove = FENParts.fullmoveClock <^>
+            StringParser.digit.many1.stringValue.map { Int($0) }
+            <?> "full move clock"
+
+        // Parse
+        return GenericParser.lift6({ [$0, $1, $2, $3, $4, $5] },
+                                   parser1: placements,
+                                   parser2: activeTeamColor,
+                                   parser3: castling,
+                                   parser4: enpassantTarget,
+                                   parser5: halfMove.optional,
+                                   parser6: fullMove.optional)
     }()
 
-    public static func parse(data: String) throws -> [FENParts] {
+    public static func parse(data: String) throws -> [FENParts?] {
         return try Self.parser.run(sourceName: "", input: data)
 //        Self.parser.runSafe(userState: , sourceName: , input: )
     }
@@ -87,7 +119,7 @@ enum FENParts {
 
 func fenstrings() {
 
-    print(try! FENParts.parse(data: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
+//    print(try! FENParts.parse(data: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
 
     print(try! FENParts.parse(data: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"))
 
