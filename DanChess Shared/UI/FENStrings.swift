@@ -58,8 +58,8 @@ enum FENParts {
         // Active color
         // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
         //                                             ^
-        let whiteColorActive = symbol("w") *> GenericParser(result: TeamColor.white)
-        let blackColorActive = symbol("b") *> GenericParser(result: TeamColor.black)
+        let whiteColorActive = char("w") *> just(TeamColor.white)
+        let blackColorActive = char("b") *> just(TeamColor.black)
         let activeTeamColor =
             FENParts.activeColor <^> (whiteColorActive <|> blackColorActive)
             <* lexer.whiteSpace <?> "team color"
@@ -69,7 +69,7 @@ enum FENParts {
         //                                               ^--^
         let castling =
             FENParts.castlingAvailability <^>
-            (StringParser.oneOf("kqKQ").many <|> (symbol("-") *> GenericParser(result: ["-"])))
+            (StringParser.oneOf("kqKQ").many1 <|> (char("-") *> just(["-"])))
             <* lexer.whiteSpace <?> "castling availability"
 
         // Enpassant target
@@ -77,14 +77,14 @@ enum FENParts {
         // e.g. e3                                            ^
         let rank = StringParser.oneOf("12345678")
         let file = StringParser.oneOf("abcdefgh")
-        let position: GenericParser<String, (), Position?> = file >>- { f in
+        let position = file >>- { f in
             rank >>- { r in
                 return just(Position(Rank(String(r)), File(String(f))))
             }
         }
         let enpassantTarget = FENParts.enpassantTarget <^>
             (position <|>
-                (symbol("-") *> just(nil) ))
+                (char("-") *> just(nil) ))
             <* lexer.whiteSpace.optional <?> "enpassant target"
 
         // Move clocks
