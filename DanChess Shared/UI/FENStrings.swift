@@ -28,7 +28,7 @@ import SwiftParsec
  ref (https://en.wikipedia.org/wiki/Forsyth–Edwards_Notation)
  */
 
-func just<A>(_ result: A) -> GenericParser<String, (), A> { GenericParser(result: result) }
+func pure<A>(_ result: A) -> GenericParser<String, (), A> { GenericParser(result: result) }
 
 enum FENParts {
     case piecePlacement([[Character]])
@@ -58,8 +58,8 @@ enum FENParts {
         // Active color
         // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
         //                                             ^
-        let whiteColorActive = char("w") *> just(TeamColor.white)
-        let blackColorActive = char("b") *> just(TeamColor.black)
+        let whiteColorActive = char("w") *> pure(TeamColor.white)
+        let blackColorActive = char("b") *> pure(TeamColor.black)
         let activeTeamColor =
             FENParts.activeColor <^> (whiteColorActive <|> blackColorActive)
             <* lexer.whiteSpace <?> "team color"
@@ -69,7 +69,7 @@ enum FENParts {
         //                                               ^--^
         let castling =
             FENParts.castlingAvailability <^>
-            (StringParser.oneOf("kqKQ").many1 <|> (char("-") *> just(["-"])))
+            (StringParser.oneOf("kqKQ").many1 <|> (char("-") *> pure(["-"])))
             <* lexer.whiteSpace <?> "castling availability"
 
         // Enpassant target
@@ -79,12 +79,12 @@ enum FENParts {
         let file = StringParser.oneOf("abcdefgh")
         let position = file >>- { f in
             rank >>- { r in
-                return just(Position(Rank(String(r)), File(String(f))))
+                return pure(Position(Rank(String(r)), File(String(f))))
             }
         }
         let enpassantTarget = FENParts.enpassantTarget <^>
             (position <|>
-                (char("-") *> just(nil) ))
+                (char("-") *> pure(nil) ))
             <* lexer.whiteSpace.optional <?> "enpassant target"
 
         // Move clocks
@@ -97,6 +97,17 @@ enum FENParts {
         let fullMove = FENParts.fullmoveClock <^>
             StringParser.digit.many1.stringValue.map { Int($0) }
             <?> "full move clock"
+
+        // Doesn't telegraph errors correctly
+//        func createParts2<A>(_ lhs: A) -> (A) -> [A] {
+//            return { rhs in return [lhs, rhs] }
+//        }
+//        return createParts2 <^> placements <*> activeTeamColor
+
+//        func createParts3<A>(_ lhs: A) -> (A) -> (A) -> [A] {
+//            { a in { b in [lhs, a, b] } }
+//        }
+//        return createParts3 <^> placements <*> activeTeamColor <*> castling
 
         // Parse
         return GenericParser.lift6({ [$0, $1, $2, $3, $4, $5] },
