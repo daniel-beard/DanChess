@@ -5,10 +5,13 @@
 module FENParser (main) where
 
 import Control.Monad
+import Data.Char
 import Data.Void
+import System.Environment
+
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import System.Environment
+import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void String 
 
@@ -21,10 +24,25 @@ data PieceType
   | Pawn
   deriving (Eq, Show)
 
-data TeamColor = TeamColorWhite | TeamColorBlack
+data TeamColor
+  = TeamColorWhite
+  | TeamColorBlack
   deriving (Eq, Show)
 
 type Piece = (PieceType, TeamColor)
+
+-- Can be a piece or a 'skip' digit
+data PiecePlacement
+  = PlacementPiece Piece
+  | PlacementInt Int
+  deriving (Eq, Show)
+
+data CastlingAvailability
+  = WhiteKingside
+  | WhiteQueenside
+  | BlackKingside
+  | BlackQueenside
+  deriving (Eq, Show)
 
 data Rank
   = RankOne
@@ -47,6 +65,59 @@ data File
   | FileG
   | FileH
   deriving (Eq, Show)
+
+-- Piece placements
+-- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+-- ^-----------------------------------------^
+
+piece :: Parser Piece
+piece = choice [
+  (Pawn,    TeamColorWhite) <$ char 'P',
+  (Knight,  TeamColorWhite) <$ char 'N',
+  (Bishop,  TeamColorWhite) <$ char 'B',
+  (Rook,    TeamColorWhite) <$ char 'R',
+  (Queen,   TeamColorWhite) <$ char 'Q',
+  (King,    TeamColorWhite) <$ char 'K',
+
+  (Pawn,    TeamColorBlack) <$ char 'p',
+  (Knight,  TeamColorBlack) <$ char 'n',
+  (Bishop,  TeamColorBlack) <$ char 'b',
+  (Rook,    TeamColorBlack) <$ char 'r',
+  (Queen,   TeamColorBlack) <$ char 'q',
+  (King,    TeamColorBlack) <$ char 'k' ]
+
+piecePlacement :: Parser PiecePlacement
+piecePlacement = 
+  (PlacementPiece <$> piece) <|>
+  (PlacementInt   <$> digitToInt <$> oneOf ['1'..'8'])
+
+piecePlacements :: Parser [[PiecePlacement]]
+piecePlacements = some piecePlacement `sepBy1` char('/')
+
+-- Active color
+-- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+--                                             ^
+
+teamColor :: Parser TeamColor
+teamColor = choice [
+  TeamColorWhite <$ char 'w',
+  TeamColorBlack <$ char 'b']
+
+-- Castling availability
+-- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+--                                               ^--^
+castlingAvailability :: Parser [CastlingAvailability]
+castlingAvailability = 
+  (pure [] <$> (char '-')) <|>
+  some (
+    WhiteKingside  <$ char 'K' <|>
+    WhiteQueenside <$ char 'Q' <|>
+    BlackKingside  <$ char 'k' <|>
+    BlackQueenside <$ char 'q')
+
+-- Enpassant Target
+-- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+--                                               ^--^
 
 rank :: Parser Rank
 rank = choice [
@@ -76,32 +147,31 @@ position = do
   r <- rank
   return (f, r)
 
--- Parse team color
-teamColor :: Parser TeamColor 
-teamColor = choice [
-  TeamColorWhite <$ char 'w',
-  TeamColorBlack <$ char 'b']
+enpassantTarget :: Parser (Maybe (File, Rank))
+enpassantTarget = do
+  (Nothing <$ (char '-')) <|> (Just <$> position)
 
-piece :: Parser Piece
-piece = choice [
-  (Pawn,    TeamColorWhite) <$ char 'P',
-  (Knight,  TeamColorWhite) <$ char 'N'
-  (Bishop,  TeamColorWhite) <$ char 'B',
-  (Rook,    TeamColorWhite) <$ char 'R',
-  (Queen,   TeamColorWhite) <$ char 'Q',
-  (King,    TeamColorWhite) <$ char 'K',
+-- Move Clocks
+-- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+--                                                      ^-^
 
-  (Pawn,    TeamColorBlack) <$ char 'p',
-  (Knight,  TeamColorBlack) <$ char 'n'
-  (Bishop,  TeamColorBlack) <$ char 'b',
-  (Rook,    TeamColorBlack) <$ char 'r',
-  (Queen,   TeamColorBlack) <$ char 'q',
-  (King,    TeamColorBlack) <$ char 'k' ]
+halfmoveClock = L.decimal
+fullmoveClock = L.decimal
 
--- piecePlacements :: Parser 
+fen :: Parser ([[PiecePlacement]], TeamColor, [CastlingAvailability], Maybe (File, Rank), Int, Int)
+fen = (,,,,,) <$> 
+  (piecePlacements <* space1) <*> 
+  (teamColor <* space1) <*>
+  (castlingAvailability <* space1) <*>
+  (enpassantTarget <* space1) <*>
+  (halfmoveClock <* space1) <*> fullmoveClock
+
 
 -- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 main = do
-    -- input <- fmap head getArgs
-    -- putStrLn (show input)
-    parseTest (position) "e4"
+  -- input <- fmap head getArgs
+  -- putStrLn (show input)
+  case (parse (fen) "" "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") of
+    Left bundle -> putStrLn (errorBundlePretty bundle)
+    Right xs -> putStrLn $ show xs
+  -- parseTest (piecePlacement) "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
