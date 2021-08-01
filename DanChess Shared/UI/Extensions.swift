@@ -19,6 +19,17 @@ extension CGSize {
     }
 }
 
+extension SKColor {
+    /// Platform agnostic color init method
+    class func _dbcolor(red: CGFloat, green: CGFloat, blue: CGFloat) -> SKColor {
+        #if os(macOS)
+            return SKColor(deviceRed: red, green: green, blue: blue, alpha: 1)
+        #else
+            return SKColor(red: red, green: green, blue: blue, alpha: 1)
+        #endif
+    }
+}
+
 extension GenericParser {
     /// Return a parser that applies the result of the supplied parsers to the
     /// lifted function. The parsers are applied from left to right.

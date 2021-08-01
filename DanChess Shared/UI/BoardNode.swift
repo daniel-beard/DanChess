@@ -45,9 +45,9 @@ class BoardNode: SKNode {
 
         // just for testing
         fenstrings()
-        
-        let light = SKColor(deviceRed: 235 / 255, green: 215/255, blue: 185/255, alpha: 1)
-        let dark = SKColor(deviceRed: 175 / 255, green: 135 / 255, blue: 105 / 255, alpha: 1)
+
+        let light = SKColor._dbcolor(red: 235/255, green: 235/255, blue: 185/255)
+        let dark = SKColor._dbcolor(red: 175/255, green: 135/255, blue: 105/255)
         for file in 0..<8 {
             for rank in 0..<8 {
                 let square = SKShapeNode(rect:
@@ -107,7 +107,7 @@ class BoardNode: SKNode {
     private func moveOverlaySprite() -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
         square.name = "overlay"
-        let color = SKColor(deviceRed: 190/255, green: 37/255, blue: 109/255, alpha: 1)
+        let color = SKColor._dbcolor(red: 190/255, green: 37/255, blue: 109/255)
         square.fillColor = color
         return square
     }
