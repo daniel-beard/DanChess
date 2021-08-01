@@ -142,10 +142,8 @@ file = choice [
   FileH <$ char 'h']
 
 position :: Parser (File, Rank)
-position = do
-  f <- file
-  r <- rank
-  return (f, r)
+-- position = (,) <$> file <*> rank
+position = liftM2 (,) file rank
 
 enpassantTarget :: Parser (Maybe (File, Rank))
 enpassantTarget = do
@@ -154,7 +152,6 @@ enpassantTarget = do
 -- Move Clocks
 -- rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 --                                                      ^-^
-
 halfmoveClock = L.decimal
 fullmoveClock = L.decimal
 
@@ -171,7 +168,7 @@ fen = (,,,,,) <$>
 main = do
   -- input <- fmap head getArgs
   -- putStrLn (show input)
-  case (parse (fen) "" "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") of
+  case (parse (fen) "" "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq e3 0 1") of
     Left bundle -> putStrLn (errorBundlePretty bundle)
     Right xs -> putStrLn $ show xs
   -- parseTest (piecePlacement) "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"

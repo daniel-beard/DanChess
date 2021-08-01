@@ -35,6 +35,7 @@ class BoardNode: SKNode {
         self.squareSize = Int(min(frame.size.width, frame.size.height) / 8)
         super.init()
         setupSquares()
+        //TODO: Replace this with the parser combinator approach
         if let fenString = fenString {
             setupPieces(with: fenString)
         }

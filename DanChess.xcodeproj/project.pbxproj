@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		242821B4266DD0C800EE2BCD /* SwiftParsec in Frameworks */ = {isa = PBXBuildFile; productRef = 242821B3266DD0C800EE2BCD /* SwiftParsec */; };
-		242821B6266DD10F00EE2BCD /* FENStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENStrings.swift */; };
-		242821B7266DD10F00EE2BCD /* FENStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENStrings.swift */; };
+		242821B6266DD10F00EE2BCD /* FENParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENParser.swift */; };
+		242821B7266DD10F00EE2BCD /* FENParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENParser.swift */; };
 		2486F612262D13F900648688 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F611262D13F900648688 /* AppDelegate.swift */; };
 		2486F614262D13F900648688 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F613262D13F900648688 /* GameViewController.swift */; };
 		2486F617262D13F900648688 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2486F615262D13F900648688 /* Main.storyboard */; };
@@ -33,10 +33,12 @@
 		2486F6432634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
 		2486F6482636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
 		2486F6492636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
+		24E03DF226B7344A0045B49E /* FENTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24E03DF126B7344A0045B49E /* FENTransform.swift */; };
+		24E03DF326B7344A0045B49E /* FENTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24E03DF126B7344A0045B49E /* FENTransform.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		242821B5266DD10F00EE2BCD /* FENStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENStrings.swift; sourceTree = "<group>"; };
+		242821B5266DD10F00EE2BCD /* FENParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENParser.swift; sourceTree = "<group>"; };
 		2486F606262D13F600648688 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		2486F607262D13F600648688 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
 		2486F608262D13F600648688 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 		2486F63E262D193600648688 /* Array2D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
 		2486F6412634E1FD00648688 /* Piece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Piece.swift; sourceTree = "<group>"; };
 		2486F6472636660500648688 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		24E03DF126B7344A0045B49E /* FENTransform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENTransform.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +80,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		245E9C66269BB77800B3EC59 /* FENParser */ = {
+			isa = PBXGroup;
+			children = (
+				242821B5266DD10F00EE2BCD /* FENParser.swift */,
+				24E03DF126B7344A0045B49E /* FENTransform.swift */,
+			);
+			path = FENParser;
+			sourceTree = "<group>";
+		};
 		2486F600262D13F600648688 = {
 			isa = PBXGroup;
 			children = (
@@ -90,6 +102,7 @@
 		2486F605262D13F600648688 /* DanChess Shared */ = {
 			isa = PBXGroup;
 			children = (
+				245E9C66269BB77800B3EC59 /* FENParser */,
 				2486F63A262D152800648688 /* UI */,
 				2486F606262D13F600648688 /* Actions.sks */,
 				2486F607262D13F600648688 /* GameScene.sks */,
@@ -138,7 +151,6 @@
 				2486F63E262D193600648688 /* Array2D.swift */,
 				2486F6412634E1FD00648688 /* Piece.swift */,
 				2486F6472636660500648688 /* Extensions.swift */,
-				242821B5266DD10F00EE2BCD /* FENStrings.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -260,7 +272,8 @@
 				2486F614262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F612262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F63F262D193600648688 /* Array2D.swift in Sources */,
-				242821B6266DD10F00EE2BCD /* FENStrings.swift in Sources */,
+				242821B6266DD10F00EE2BCD /* FENParser.swift in Sources */,
+				24E03DF226B7344A0045B49E /* FENTransform.swift in Sources */,
 				2486F6482636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -275,7 +288,8 @@
 				2486F625262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F623262D13F900648688 /* AppDelegate.swift in Sources */,
 				2486F640262D193600648688 /* Array2D.swift in Sources */,
-				242821B7266DD10F00EE2BCD /* FENStrings.swift in Sources */,
+				242821B7266DD10F00EE2BCD /* FENParser.swift in Sources */,
+				24E03DF326B7344A0045B49E /* FENTransform.swift in Sources */,
 				2486F6492636660500648688 /* Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
