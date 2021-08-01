@@ -10,6 +10,7 @@
 		242821B4266DD0C800EE2BCD /* SwiftParsec in Frameworks */ = {isa = PBXBuildFile; productRef = 242821B3266DD0C800EE2BCD /* SwiftParsec */; };
 		242821B6266DD10F00EE2BCD /* FENParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENParser.swift */; };
 		242821B7266DD10F00EE2BCD /* FENParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242821B5266DD10F00EE2BCD /* FENParser.swift */; };
+		242C10A026B7593C005BE4B5 /* SwiftParsec in Frameworks */ = {isa = PBXBuildFile; productRef = 242C109F26B7593C005BE4B5 /* SwiftParsec */; };
 		2486F612262D13F900648688 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F611262D13F900648688 /* AppDelegate.swift */; };
 		2486F614262D13F900648688 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F613262D13F900648688 /* GameViewController.swift */; };
 		2486F617262D13F900648688 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2486F615262D13F900648688 /* Main.storyboard */; };
@@ -66,6 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				242C10A026B7593C005BE4B5 /* SwiftParsec in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +82,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		242C109E26B7593C005BE4B5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		245E9C66269BB77800B3EC59 /* FENParser */ = {
 			isa = PBXGroup;
 			children = (
@@ -96,6 +105,7 @@
 				2486F610262D13F900648688 /* DanChess iOS */,
 				2486F621262D13F900648688 /* DanChess macOS */,
 				2486F60F262D13F900648688 /* Products */,
+				242C109E26B7593C005BE4B5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -171,6 +181,9 @@
 			dependencies = (
 			);
 			name = "DanChess iOS";
+			packageProductDependencies = (
+				242C109F26B7593C005BE4B5 /* SwiftParsec */,
+			);
 			productName = "DanChess iOS";
 			productReference = 2486F60E262D13F900648688 /* DanChess.app */;
 			productType = "com.apple.product-type.application";
@@ -561,6 +574,11 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		242821B3266DD0C800EE2BCD /* SwiftParsec */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 242821B2266DD0C800EE2BCD /* XCRemoteSwiftPackageReference "SwiftParsec" */;
+			productName = SwiftParsec;
+		};
+		242C109F26B7593C005BE4B5 /* SwiftParsec */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 242821B2266DD0C800EE2BCD /* XCRemoteSwiftPackageReference "SwiftParsec" */;
 			productName = SwiftParsec;
