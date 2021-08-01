@@ -10,11 +10,24 @@ import Foundation
 
 ///  This file takes the raw output from the parser and transforms into usable data structures we can directly send to the BoardNode class.
 ///  The parser does some basic constraint checking, but this file is responsible for transforming things like:
-///     Raw Character piece placements -> 2D Array
+///     Raw character piece placements -> 2D Array
+///     Raw character castling availability -> Bools
 ///  As well as validating that the input FEN is valid for use.
 
 enum FENError: Error {
     case placementTransform(String)
+    case malformedCastling(String)
+}
+
+extension FENParts {
+    mutating func transform() throws {
+        transformedPieces = try placementsFromChars(piecePlacement)
+        try applyCastlingAvailability(fenParts: &self)
+    }
+
+    func validate() throws {
+        //TODO: Implement
+    }
 }
 
 // The values here go from:
@@ -57,6 +70,20 @@ func placementsFromChars(_ chars: [[Character]]) throws -> Array2D<Piece> {
         file = File(rawValue: file.rawValue + 1) ?? .a
     }
     return pieces
+}
+
+// 3. Castling availability. If neither side can castle, this is "-". Otherwise, this has one or more letters: "K" (White can castle kingside), "Q" (White can castle queenside), "k" (Black can castle kingside), and/or "q" (Black can castle queenside). A move that temporarily prevents castling does not negate this notation.
+func applyCastlingAvailability(fenParts: inout FENParts) throws {
+    for ch in fenParts.castlingAvailability {
+        switch ch {
+            case "K": fenParts.whiteCanCastleKingside = true
+            case "Q": fenParts.whiteCanCastleQueenside = true
+            case "k": fenParts.blackCanCastleKingside = true
+            case "q": fenParts.blackCanCastleQueenside = true
+            case "-": break
+            default: throw FENError.malformedCastling("Malformed castling character: \(ch)")
+        }
+    }
 }
 
 //TODO: Validation stuff:

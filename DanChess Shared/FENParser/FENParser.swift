@@ -41,6 +41,10 @@ struct FENParts {
 
     //MARK: Transformed values
     var transformedPieces: Array2D<Piece>?
+    var whiteCanCastleQueenside = false
+    var whiteCanCastleKingside = false
+    var blackCanCastleQueenside = false
+    var blackCanCastleKingside = false
 }
 
 let FENParser: GenericParser<String, (), FENParts> = {
@@ -120,11 +124,10 @@ func fenstrings() {
     do {
         var fenParts = try FENParser.run(sourceName: "",
                                          input: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        try fenParts.transform()
+        try fenParts.validate()
+
         print("fenParts: \(fenParts)")
-
-        fenParts.transformedPieces = try placementsFromChars(fenParts.piecePlacement)
-
-        //TODO: Validate pieces.
     } catch {
         print("Caught error: \(error)")
     }
