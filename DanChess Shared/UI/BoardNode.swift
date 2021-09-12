@@ -15,6 +15,8 @@ let knightOffsets   = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
 let bishopOffsets   = [(1,1),(1,-1),(-1,-1),(-1,1)]
 let queenOffsets    = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
 let kingOffsets     = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
+let blackKingAttackingPawnOffsets = [(-1,-1),(-1,1)]
+let whiteKingAttackingPawnOffsets = [(1,-1),(1,1)]
 
 class BoardNode: SKNode {
 
@@ -200,9 +202,13 @@ class BoardNode: SKNode {
                 return isKing(pieces[pos])
             }
 
-        //TODODB: Pawns
+        let pawnOffsets = pieceColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
+        let attackingPawns = pawnOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
+            .compactMap { $0.last }.filter { pos in
+                return isPawn(pieces[pos])
+            }
 
-        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings].flatMap { $0 }.compactMap { $0 }
+        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns].flatMap { $0 }.compactMap { $0 }
 
         //TODODB: Just for testing, we'll color attacking pieces with an orange overlay, and the king
         let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
