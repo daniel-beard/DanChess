@@ -8,6 +8,14 @@
 
 import SpriteKit
 
+// Piece movement offsets:
+// We use these to walk along rays
+let rookOffsets     = [(1,0),(-1,0),(0,1),(0,-1)]
+let knightOffsets   = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
+let bishopOffsets   = [(1,1),(1,-1),(-1,-1),(-1,1)]
+let queenOffsets    = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
+let kingOffsets     = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
+
 class BoardNode: SKNode {
 
     private var squares = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
@@ -157,6 +165,66 @@ class BoardNode: SKNode {
         }
     }
 
+    // Calculate if the king is in check for a particular color and board node.
+    // This lets us walk forward in time to check future moves.
+    public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor) -> Bool {
+        // Find the king
+        let pieceColor = teamColor == .white ? Piece.white : Piece.black
+        let kingPiece = Piece([.king, pieceColor])
+        let king = pieces.firstPosition(ofPiece: kingPiece)!
+
+        // Attacking pieces:
+
+        let attackingRooks = rookOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
+            .compactMap { $0.last }.filter { pos in
+                return isRook(pieces[pos])
+            }
+
+        let attackingKnights = knightOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
+            .compactMap { $0.last }.filter { pos in
+                return isKnight(pieces[pos])
+            }
+
+        let attackingBishops = bishopOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
+            .compactMap { $0.last }.filter { pos in
+                return isBishop(pieces[pos])
+            }
+
+        let attackingQueens = queenOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
+            .compactMap { $0.last }.filter { pos in
+                return isQueen(pieces[pos])
+            }
+
+        let attackingKings = kingOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
+            .compactMap { $0.last }.filter { pos in
+                return isKing(pieces[pos])
+            }
+
+        //TODODB: Pawns
+
+        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings].flatMap { $0 }.compactMap { $0 }
+
+        //TODODB: Just for testing, we'll color attacking pieces with an orange overlay, and the king
+        let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
+        for p in overlayPositions {
+            let sprite = moveOverlaySprite()
+            sprite.fillColor = SKColor._dbcolor(red: 255/255, green: 165/255, blue: 0/255)
+            sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
+                                      y: (p.rank.rawValue - 1) * squareSize)
+            squaresOverlay[p] = sprite
+            addChild(sprite)
+        }
+
+        print("=============================================")
+        print("\(teamColor.stringValue) king is at: \(king)")
+        print("Attacking rooks: \(attackingRooks)")
+        print("Attacking knights: \(attackingKnights)")
+        print("Attacking bishops: \(attackingBishops)")
+        print("Attacking queens: \(attackingQueens)")
+        print("Attacking kings: \(attackingKings)")
+        return true
+    }
+
     public func makeMove(from start: Position, to end: Position) {
         // Need to remove existing enemy piece from UI, if there is one.
         // Filter to any that are pieces whos name does NOT contain our current color
@@ -216,6 +284,9 @@ class BoardNode: SKNode {
             if start == Position(.eight, .a) { blackCanCastleQueenside = false }
             if start == Position(.eight, .h) { blackCanCastleKingside = false }
         }
+
+        //TODODB: Debug only
+        inCheck(pieces: pieces, teamColor: turn)
     }
 
     private func castleRookMove(start: Position, end: Position) {
@@ -274,14 +345,12 @@ class BoardNode: SKNode {
             //TODO Exchange pieces
             //TODO Check
         } else if piece.contains(.rook) {
-            let offsets = [(1,0),(-1,0),(0,1),(0,-1)]
-            moves.append(contentsOf: offsets.map {
-                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: rookOffsets.map {
+                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.knight) {
-            let offsets = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
-            moves.append(contentsOf: offsets.map {
+            moves.append(contentsOf: knightOffsets.map {
                 if let next = pos.offset(by: $0.0, $0.1), pieces[next]?.color() != currColor {
                     return next
                 }
@@ -289,21 +358,18 @@ class BoardNode: SKNode {
             })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.bishop) {
-            let offsets = [(1,1),(1,-1),(-1,-1),(-1,1)]
-            moves.append(contentsOf: offsets.map {
-                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: bishopOffsets.map {
+                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.queen) {
-            let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-            moves.append(contentsOf: offsets.map {
-                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1)
+            moves.append(contentsOf: queenOffsets.map {
+                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
             //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.king) {
-            let offsets = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-            moves.append(contentsOf: offsets.map {
-                ray(from: pos, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
+            moves.append(contentsOf: kingOffsets.map {
+                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
             }.flatMap{ $0 })
             // Handle castling
             if turn == .white {
@@ -338,18 +404,24 @@ class BoardNode: SKNode {
         return moves.compactMap { $0 }
     }
 
-    // Returns potential moves as an array along a movement line 'offset'
-    // Will include an enemy player if this movement line leads to a taking move.
-    // Set maxLength to a smaller value to control the maximum movement line length
-    private func ray(from position: Position, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
-        let ourColor = pieces[position]?.color()
+    /** Returns potential moves as an array along a movement line 'offset'
+        Will include an enemy player if this movement line leads to a taking move.
+
+        @param from: The position to start searching. We calculate what our color is by looking up the piece at this position.
+        @param in: The piece 2D array to read.
+        @param rankOffset: rank component of the offset movement line we are walking.
+        @param fileOffset: file component of the offset movement line we are walking.
+        @param maxLength: Set to a smaller value to control the maximum movement line length
+    */
+    private func ray(from position: Position, in pieceArray: Array2D<Piece>, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
+        let ourColor = pieceArray[position]?.color()
         var line = [Position]()
         var currPos = position
         while true {
             if line.count >= maxLength { break }
             guard let next = currPos.offset(by: rankOffset, fileOffset) else { break }
             // Is there a piece at next
-            if let nextPiece = pieces[next] {
+            if let nextPiece = pieceArray[next] {
                 if nextPiece.color() != ourColor {
                     line.append(next)
                 }
@@ -362,12 +434,18 @@ class BoardNode: SKNode {
         return line
     }
 
-    private func isPawn(_ piece: Piece?) -> Bool { piece?.contains(.pawn) ?? false }
-    private func isPawn(_ pos: Position?) -> Bool { pieces[pos]?.contains(.pawn) ?? false }
     private func isRook(_ piece: Piece?) -> Bool { piece?.contains(.rook) ?? false }
     private func isRook(_ pos: Position?) -> Bool { pieces[pos]?.contains(.rook) ?? false }
+    private func isKnight(_ piece: Piece?) -> Bool { piece?.contains(.knight) ?? false }
+    private func isKnight(_ pos: Position?) -> Bool { pieces[pos]?.contains(.knight) ?? false }
+    private func isBishop(_ piece: Piece?) -> Bool { piece?.contains(.bishop) ?? false }
+    private func isBishop(_ pos: Position?) -> Bool { pieces[pos]?.contains(.bishop) ?? false }
+    private func isQueen(_ piece: Piece?) -> Bool { piece?.contains(.queen) ?? false }
+    private func isQueen(_ pos: Position?) -> Bool { pieces[pos]?.contains(.queen) ?? false }
     private func isKing(_ piece: Piece?) -> Bool { piece?.contains(.king) ?? false }
     private func isKing(_ pos: Position?) -> Bool { pieces[pos]?.contains(.king) ?? false }
+    private func isPawn(_ piece: Piece?) -> Bool { piece?.contains(.pawn) ?? false }
+    private func isPawn(_ pos: Position?) -> Bool { pieces[pos]?.contains(.pawn) ?? false }
     private func isEmpty(_ pos: Position?) -> Bool { pieces[pos] == nil }
 
     //TODO: Implement a board -> FEN string function, then the load / save just becomes these two methods

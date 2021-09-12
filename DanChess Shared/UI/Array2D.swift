@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Array2D<T> {
+class Array2D<T: Equatable> {
 
     // Size in one dimension. E.g. size = 8 implies a 2D array of 8x8
     var size: Int
@@ -78,6 +78,30 @@ class Array2D<T> {
         }
     }
 
+    func positionToIndex(position: Position) -> Int {
+        let idx = size * Int(position.rank.rawValue - 1) + Int(position.file.rawValue - 1)
+        return idx
+    }
+
+    // Filter the board for a particular piece. Returns nil, or a position.
+    // Returns only the first match.
+    func firstPosition(ofPiece piece: T) -> Position? {
+        guard let idx = matrix.firstIndex(where: { $0 == piece }) else { return nil }
+        return position(fromIndex: idx)
+    }
+
+    // Return positions of all pieces matching a condition
+    func allPositions(matching: (T) -> Bool) -> [Position] {
+        var positions = [Position]()
+        for (idx, piece) in matrix.enumerated() {
+            guard let piece = piece else { continue }
+            guard matching(piece) else { continue }
+            guard let position = position(fromIndex: idx) else { continue }
+            positions.append(position)
+        }
+        return positions
+    }
+
     func collect(_ p: Position?...) -> [T?] {
         var result = [T?]()
         for pos in p {
@@ -88,6 +112,12 @@ class Array2D<T> {
 
     func colCount() -> Int { size }
     func rowCount() -> Int { size }
+
+    func position(fromIndex idx: Int) -> Position? {
+        guard idx >= 0 && idx <= matrix.count else { return nil }
+        let pair = index(idx)
+        return Position(Rank(rawValue: pair.1+1), File(rawValue: pair.0+1))
+    }
 
     func index(col: Int, row: Int) -> Int {
         return size * row + col
