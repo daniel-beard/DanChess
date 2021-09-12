@@ -178,30 +178,15 @@ class BoardNode: SKNode {
         // Attacking pieces:
 
         let attackingRooks = rookOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in
-                return isRook(pieces[pos])
-            }
-
+            .compactMap { $0.last }.filter { pos in isRook(pieces[pos]) }
         let attackingKnights = knightOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in
-                return isKnight(pieces[pos])
-            }
-
+            .compactMap { $0.last }.filter { pos in isKnight(pieces[pos]) }
         let attackingBishops = bishopOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in
-                return isBishop(pieces[pos])
-            }
-
+            .compactMap { $0.last }.filter { pos in isBishop(pieces[pos]) }
         let attackingQueens = queenOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in
-                return isQueen(pieces[pos])
-            }
-
+            .compactMap { $0.last }.filter { pos in isQueen(pieces[pos]) }
         let attackingKings = kingOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
-            .compactMap { $0.last }.filter { pos in
-                return isKing(pieces[pos])
-            }
-
+            .compactMap { $0.last }.filter { pos in isKing(pieces[pos]) }
         let pawnOffsets = pieceColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
         let attackingPawns = pawnOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
             .compactMap { $0.last }.filter { pos in
