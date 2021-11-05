@@ -14,18 +14,31 @@ import Foundation
 ///     Raw character castling availability -> Bools
 ///  As well as validating that the input FEN is valid for use.
 
-enum FENError: Error {
+enum FENError: Error, Equatable {
     case placementTransform(String)
     case malformedCastling(String)
+    case invalidRankCount(String)
 }
 
 extension FENParts {
     mutating func transform() throws {
+        try validatePreTransform()
+
         transformedPieces = try placementsFromChars(piecePlacement)
         try applyCastlingAvailability(fenParts: &self)
+
+        try validatePostTransform()
     }
 
-    func validate() throws {
+    /// This function is for validating before we transform into data structures
+    /// E.g. Validating counts of placements / empty squares in the placements.
+    private func validatePreTransform() throws {
+        // Board:
+        // There are exactly 8 ranks (rows).
+        guard piecePlacement.count == 8 else { throw FENError.invalidRankCount("Invalid rank count, found: \(piecePlacement.count), expected: 8")}
+    }
+
+    private func validatePostTransform() throws {
         //TODO: Implement
     }
 }
@@ -91,7 +104,6 @@ func applyCastlingAvailability(fenParts: inout FENParts) throws {
 /**
 Board:
 
-There are exactly 8 ranks (rows).
 The sum of the empty squares and pieces add to 8 for each rank (row).
 There are no consecutive numbers for empty squares.
 Kings:

@@ -30,7 +30,7 @@ import SwiftParsec
 
 func pure<A>(_ result: A) -> GenericParser<String, (), A> { GenericParser(result: result) }
 
-struct FENParts {
+public struct FENParts {
     //MARK: Raw parser values
     let piecePlacement: [[Character]]
     let activeColor: TeamColor
@@ -47,7 +47,7 @@ struct FENParts {
     var blackCanCastleKingside = false
 }
 
-let FENParser: GenericParser<String, (), FENParts> = {
+public let FENParser: GenericParser<String, (), FENParts> = {
 
     // Definitions + Setup
     let fen = LanguageDefinition<()>.empty
@@ -125,8 +125,6 @@ func fenstrings() {
         var fenParts = try FENParser.run(sourceName: "",
                                          input: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         try fenParts.transform()
-        try fenParts.validate()
-
         print("fenParts: \(fenParts)")
     } catch {
         print("Caught error: \(error)")
