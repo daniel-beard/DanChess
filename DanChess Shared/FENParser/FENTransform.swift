@@ -15,9 +15,12 @@ import Foundation
 ///  As well as validating that the input FEN is valid for use.
 
 enum FENError: Error, Equatable {
-    case placementTransform(String)
-    case malformedCastling(String)
+    case consecutiveNumbers(String)
     case invalidRankCount(String)
+    case invalidRowCount(String)
+    case invalidPlacementValue(String)
+    case malformedCastling(String)
+    case placementTransform(String)
 }
 
 extension FENParts {
@@ -35,7 +38,40 @@ extension FENParts {
     private func validatePreTransform() throws {
         // Board:
         // There are exactly 8 ranks (rows).
-        guard piecePlacement.count == 8 else { throw FENError.invalidRankCount("Invalid rank count, found: \(piecePlacement.count), expected: 8")}
+        guard piecePlacement.count == 8 else {
+            throw FENError.invalidRankCount("Invalid rank count, found: \(piecePlacement.count), expected: 8")
+        }
+
+        // Board:
+        // There are no consecutive numbers for empty squares.
+        for rank in piecePlacement {
+            var lastWasNumber = false
+            for pChar in rank {
+                let currIsNumber = pChar.isNumber
+                if currIsNumber && lastWasNumber {
+                    throw FENError.consecutiveNumbers("Unexpected consecutive number: \(pChar)")
+                }
+                lastWasNumber = currIsNumber
+            }
+        }
+
+        // Board:
+        // The sum of the empty squares and pieces add to 8 for each rank (row).
+        for rank in piecePlacement {
+            var count = 0
+            for pChar in rank {
+                if pChar.isNumber {
+                    count += pChar.wholeNumberValue ?? 0
+                } else if validPiecePlacementChars.contains(String(pChar)) {
+                    count += 1
+                } else {
+                    throw FENError.invalidPlacementValue("Invalid char: '\(pChar)'")
+                }
+            }
+            if count != 8 {
+                throw FENError.invalidRowCount("Invalid count for row, got: \(count)")
+            }
+        }
     }
 
     private func validatePostTransform() throws {
@@ -102,10 +138,6 @@ func applyCastlingAvailability(fenParts: inout FENParts) throws {
 //TODO: Validation stuff:
 
 /**
-Board:
-
-The sum of the empty squares and pieces add to 8 for each rank (row).
-There are no consecutive numbers for empty squares.
 Kings:
 
 See if there is exactly one w_king and one b_king.

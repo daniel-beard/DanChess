@@ -8,16 +8,7 @@
 
 import SpriteKit
 
-// Piece movement offsets:
-// We use these to walk along rays
-let rookOffsets     = [(1,0),(-1,0),(0,1),(0,-1)]
-let knightOffsets   = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
-let bishopOffsets   = [(1,1),(1,-1),(-1,-1),(-1,1)]
-let queenOffsets    = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-let kingOffsets     = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-let blackKingAttackingPawnOffsets = [(-1,-1),(-1,1)]
-let whiteKingAttackingPawnOffsets = [(1,-1),(1,1)]
-
+/// Board SKNode and game logic
 class BoardNode: SKNode {
 
     private var squares = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
