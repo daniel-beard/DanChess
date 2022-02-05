@@ -8,16 +8,7 @@
 
 import SpriteKit
 
-// Piece movement offsets:
-// We use these to walk along rays
-let rookOffsets     = [(1,0),(-1,0),(0,1),(0,-1)]
-let knightOffsets   = [(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2),(-2,-1),(-2,1)]
-let bishopOffsets   = [(1,1),(1,-1),(-1,-1),(-1,1)]
-let queenOffsets    = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-let kingOffsets     = [(1,0),(1,1),(1,-1),(-1,0),(-1,1),(0,0),(0,1),(0,-1),(-1,-1)]
-let blackKingAttackingPawnOffsets = [(-1,-1),(-1,1)]
-let whiteKingAttackingPawnOffsets = [(1,-1),(1,1)]
-
+/// Board SKNode and game logic
 class BoardNode: SKNode {
 
     private var squares = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
@@ -169,14 +160,13 @@ class BoardNode: SKNode {
 
     // Calculate if the king is in check for a particular color and board node.
     // This lets us walk forward in time to check future moves.
-    public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor) -> Bool {
+    public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
         // Find the king
         let pieceColor = teamColor == .white ? Piece.white : Piece.black
         let kingPiece = Piece([.king, pieceColor])
         let king = pieces.firstPosition(ofPiece: kingPiece)!
 
         // Attacking pieces:
-
         let attackingRooks = rookOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isRook(pieces[pos]) }
         let attackingKnights = knightOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
@@ -193,17 +183,19 @@ class BoardNode: SKNode {
                 return isPawn(pieces[pos])
             }
 
-        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns].flatMap { $0 }.compactMap { $0 }
+        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
+            .flatMap { $0 }.compactMap { $0 }
 
-        //TODODB: Just for testing, we'll color attacking pieces with an orange overlay, and the king
-        let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
-        for p in overlayPositions {
-            let sprite = moveOverlaySprite()
-            sprite.fillColor = SKColor._dbcolor(red: 255/255, green: 165/255, blue: 0/255)
-            sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
-                                      y: (p.rank.rawValue - 1) * squareSize)
-            squaresOverlay[p] = sprite
-            addChild(sprite)
+        if overlayAttackingPieces {
+            let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
+            for p in overlayPositions {
+                let sprite = moveOverlaySprite()
+                sprite.fillColor = SKColor._dbcolor(red: 255/255, green: 165/255, blue: 0/255)
+                sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
+                                          y: (p.rank.rawValue - 1) * squareSize)
+                squaresOverlay[p] = sprite
+                addChild(sprite)
+            }
         }
 
         print("=============================================")
@@ -392,6 +384,12 @@ class BoardNode: SKNode {
             // We can move anywhere that doesn't take us into check
             // TODO
         }
+
+        // TODO: Create a new array with existing possible moves (culling nil values)
+        // Add the extra squares that castling would traverse
+        // Play forward in all cases, remove the values that would take us into check
+        // Return values - extra castling squares
+
         return moves.compactMap { $0 }
     }
 

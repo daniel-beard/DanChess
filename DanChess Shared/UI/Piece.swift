@@ -144,14 +144,14 @@ enum TeamColor: Int {
 func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
     var pieceName = ""
     var color = ""
-    if piece.contains(.white) { color = "White" }
-    if piece.contains(.black) { color = "Black" }
-    if piece.contains(.pawn) { pieceName = "Pawn" }
-    if piece.contains(.rook) { pieceName = "Rook" }
-    if piece.contains(.knight) { pieceName = "Knight" }
-    if piece.contains(.bishop) { pieceName = "Bishop" }
-    if piece.contains(.queen) { pieceName = "Queen" }
-    if piece.contains(.king) { pieceName = "King" }
+    if piece.contains(.white)   { color = "White" }
+    if piece.contains(.black)   { color = "Black" }
+    if piece.contains(.pawn)    { pieceName = "Pawn" }
+    if piece.contains(.rook)    { pieceName = "Rook" }
+    if piece.contains(.knight)  { pieceName = "Knight" }
+    if piece.contains(.bishop)  { pieceName = "Bishop" }
+    if piece.contains(.queen)   { pieceName = "Queen" }
+    if piece.contains(.king)    { pieceName = "King" }
     return (pieceName, color)
 }
 
