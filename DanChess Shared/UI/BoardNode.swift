@@ -8,6 +8,12 @@
 
 import SpriteKit
 
+enum GameMode {
+    case regular
+    case whitePawnPromotion
+    case blackPawnPromotion
+}
+
 /// Board SKNode and game logic
 class BoardNode: SKNode {
 
@@ -15,6 +21,9 @@ class BoardNode: SKNode {
     private var squaresOverlay = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
     private var pieces = Array2D<Piece>(size: 8, defaultValues: nil)
     let squareSize: Int
+
+    //TODODB: This isn't implemented right now. Use this to implement promotion
+    var gameMode: GameMode = .regular
 
     /// Game Properties
     var turn: TeamColor = .white
@@ -26,12 +35,6 @@ class BoardNode: SKNode {
     var halfMoveClock = 0
     var fullMoveClock = 0
 
-    required init?(coder aDecoder: NSCoder) {
-        squareSize = 32
-        super.init(coder: aDecoder)
-        setupSquares()
-    }
-
     init(frame: CGRect, fenString: String? = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
         self.squareSize = Int(min(frame.size.width, frame.size.height) / 8)
         super.init()
@@ -40,7 +43,10 @@ class BoardNode: SKNode {
         if let fenString = fenString {
             setupPieces(with: fenString)
         }
+        print("FEN: rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        print("FEN: \(fenForCurrentBoard())")
     }
+    required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
 
     private func setupSquares() {
 
@@ -205,6 +211,8 @@ class BoardNode: SKNode {
         print("Attacking bishops: \(attackingBishops)")
         print("Attacking queens: \(attackingQueens)")
         print("Attacking kings: \(attackingKings)")
+
+        print("FEN for current board: \(fenForCurrentBoard())")
         return true
     }
 
@@ -221,6 +229,15 @@ class BoardNode: SKNode {
         pieces[start] = nil
         turn = moveColor.toggle()
         removeExistingMoveOverlays()
+
+        // Promotion TODODB:
+        if isPawn(piece) {
+            switch (piece?.color(), end.rank) {
+            case (.white, .eight): break
+            case (.black, .one): break
+            default: break
+            }
+        }
 
         // Handle enpassant
         if isPawn(piece) && end == enpassantTarget {
@@ -269,7 +286,7 @@ class BoardNode: SKNode {
         }
 
         //TODODB: Debug only
-        inCheck(pieces: pieces, teamColor: turn)
+        let _ = inCheck(pieces: pieces, teamColor: turn)
     }
 
     private func castleRookMove(start: Position, end: Position) {
@@ -437,7 +454,63 @@ class BoardNode: SKNode {
     private func isPawn(_ pos: Position?) -> Bool { pieces[pos]?.contains(.pawn) ?? false }
     private func isEmpty(_ pos: Position?) -> Bool { pieces[pos] == nil }
 
-    //TODO: Implement a board -> FEN string function, then the load / save just becomes these two methods
+    func fenForCurrentBoard() -> String {
+        var components = [String]()
+
+        // Piece positions
+        var positionsByRank = [String]()
+        for rank in Rank.allCases.reversed() {
+            var emptySquareRun = 0
+            var rankString = ""
+            for file in File.allCases {
+                guard let piece = pieces[rank, file] else {
+                    emptySquareRun += 1
+                    continue
+                }
+                if emptySquareRun > 0 {
+                    rankString += "\(emptySquareRun)"
+                    emptySquareRun = 0
+                }
+                rankString += piece.algebraicNotation
+            }
+            rankString += emptySquareRun > 0 ? "\(emptySquareRun)" : ""
+            positionsByRank.append(rankString)
+        }
+        components.append(positionsByRank.joined(separator: "/"))
+
+        // Active color
+        components.append(turn == .black ? "b" : "w")
+
+        // Castling availability
+        if !whiteCanCastleQueenside &&
+            !whiteCanCastleKingside &&
+            !blackCanCastleQueenside &&
+            !blackCanCastleKingside {
+            components.append("-")
+        } else {
+            var castling = ""
+            castling += whiteCanCastleKingside  ? "K" : ""
+            castling += whiteCanCastleQueenside ? "Q" : ""
+            castling += blackCanCastleKingside  ? "k" : ""
+            castling += blackCanCastleQueenside ? "q" : ""
+            components.append(castling)
+        }
+
+        // Enpassant target square
+        if let enpassantTarget = enpassantTarget {
+            components.append(enpassantTarget.toFen())
+        } else {
+            components.append("-")
+        }
+
+        // Halfmove clock
+        components.append("\(halfMoveClock)")
+
+        // Fullmove clock
+        components.append("\(fullMoveClock)")
+
+        return components.joined(separator: " ")
+    }
 
     private func setupPieces(with fenString: String) {
         /**

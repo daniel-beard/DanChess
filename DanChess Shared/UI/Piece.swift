@@ -28,10 +28,7 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
     static let white = Piece(rawValue: 1 << 7)
     static let black = Piece(rawValue: 1 << 8)
 
-    func color() -> TeamColor {
-        if self.contains(.white) { return .white }
-        return .black
-    }
+    func color() -> TeamColor { self.contains(.white) ? .white : .black }
 
     static func fromFen(char: Character) -> Piece? {
         let color = char.isUppercase ? white : black
@@ -47,9 +44,20 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
         }
         return [piece, color]
     }
+
+    var algebraicNotation: String {
+        var result = ""
+        if self.contains(.pawn)         { result = "p" }
+        else if self.contains(.rook)    { result = "r" }
+        else if self.contains(.knight)  { result = "n" }
+        else if self.contains(.bishop)  { result = "b" }
+        else if self.contains(.queen)   { result = "q" }
+        else if self.contains(.king)    { result = "k" }
+        return color() == .white ? result.uppercased() : result
+    }
 }
 
-enum Rank: Int, CustomDebugStringConvertible {
+enum Rank: Int, CustomDebugStringConvertible, CaseIterable {
     case one = 1
     case two
     case three
@@ -68,7 +76,8 @@ enum Rank: Int, CustomDebugStringConvertible {
         }
     }
 
-    var debugDescription: String { "\(self.rawValue)" }
+    var algebraicNotation: String { "\(rawValue)" }
+    var debugDescription: String { algebraicNotation }
 
     static func +(rank: Rank, rhs: Int) -> Rank? {
         return Rank(rawValue: rank.rawValue + rhs)
@@ -78,7 +87,7 @@ enum Rank: Int, CustomDebugStringConvertible {
     }
 }
 
-enum File: Int, CustomDebugStringConvertible {
+enum File: Int, CustomDebugStringConvertible, CaseIterable {
 
     case a = 1
     case b
@@ -104,7 +113,7 @@ enum File: Int, CustomDebugStringConvertible {
         }
     }
 
-    var debugDescription: String {
+    var algebraicNotation: String {
         switch self {
             case .a: return "a"
             case .b: return "b"
@@ -116,6 +125,8 @@ enum File: Int, CustomDebugStringConvertible {
             case .h: return "h"
         }
     }
+
+    var debugDescription: String { algebraicNotation }
 
     static func +(file: File, rhs: Int) -> File? {
         return File(rawValue: file.rawValue + rhs)
@@ -186,6 +197,10 @@ struct Position: Equatable {
         let rank = String(string.first!)
         let file = String(string.last!)
         return Position(Rank(rank), File(file))
+    }
+
+    func toFen() -> String {
+        return "\(file.algebraicNotation)\(rank.algebraicNotation)"
     }
 
     // Create new position by adding offsets to current rank & file values.
