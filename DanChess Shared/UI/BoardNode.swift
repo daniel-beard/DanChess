@@ -8,10 +8,13 @@
 
 import SpriteKit
 
+protocol BoardDelegate: AnyObject {
+    func playerPromotingPawn(at: Position)
+}
+
 enum GameMode {
     case regular
-    case whitePawnPromotion
-    case blackPawnPromotion
+    case promotion(Position)
 }
 
 /// Board SKNode and game logic
@@ -22,8 +25,9 @@ class BoardNode: SKNode {
     private var pieces = Array2D<Piece>(size: 8, defaultValues: nil)
     let squareSize: Int
 
-    //TODODB: This isn't implemented right now. Use this to implement promotion
     var gameMode: GameMode = .regular
+
+    weak var delegate: BoardDelegate?
 
     /// Game Properties
     var turn: TeamColor = .white
@@ -148,6 +152,8 @@ class BoardNode: SKNode {
     }
 
     public func canPickupPiece(at pos: Position) -> Bool {
+        // Can't make any other moves while choosing a promotion piece
+        if case .promotion(_) = gameMode { return false }
         return pieces[pos]?.color() == turn
     }
 
@@ -204,16 +210,43 @@ class BoardNode: SKNode {
             }
         }
 
-        print("=============================================")
         print("\(teamColor.stringValue) king is at: \(king)")
         print("Attacking rooks: \(attackingRooks)")
         print("Attacking knights: \(attackingKnights)")
         print("Attacking bishops: \(attackingBishops)")
         print("Attacking queens: \(attackingQueens)")
         print("Attacking kings: \(attackingKings)")
-
         print("FEN for current board: \(fenForCurrentBoard())")
+        print("=============================================")
         return true
+    }
+
+    public func choosePromotionPiece(_ piece: Piece)  {
+        guard case .promotion(let position) = gameMode else { return }
+        guard isKnight(piece)
+                || isQueen(piece)
+                || isBishop(piece)
+                || isRook(piece) else {
+            return
+        }
+        // Remove existing piece
+        pieces[position] = nil
+        removeExistingMoveOverlays()
+        self.nodes(at: uiPosition(forBoardPosition: position))
+            .filter { $0.name?.starts(with: "piece") ?? false }
+            .forEach { $0.removeFromParent() }
+
+        // Insert chosen piece
+        // TODODB: Should generalize / factor this piece out
+        pieces[position] = piece
+        let sprite = pieceSprite(for: piece)
+        let (pieceName, color) = pieceDesc(for: piece)
+        sprite.name = "piece:\(pieceName),\(color)"
+        addChild(sprite)
+        sprite.position = uiPosition(forBoardPosition: position)
+
+        // Finally, we aren't promoting a piece any more
+        gameMode = .regular
     }
 
     public func makeMove(from start: Position, to end: Position) {
@@ -227,17 +260,22 @@ class BoardNode: SKNode {
         let piece = pieces[start]
         pieces[end] = piece
         pieces[start] = nil
-        turn = moveColor.toggle()
         removeExistingMoveOverlays()
 
-        // Promotion TODODB:
+        // Promotion
         if isPawn(piece) {
             switch (piece?.color(), end.rank) {
-            case (.white, .eight): break
-            case (.black, .one): break
-            default: break
+                case (.white, .eight): fallthrough
+                case (.black, .one):
+                    gameMode = .promotion(end)
+                    delegate?.playerPromotingPawn(at: end)
+                    return
+                default: break
             }
         }
+
+        // Set next turn
+        defer { turn = moveColor.toggle() }
 
         // Handle enpassant
         if isPawn(piece) && end == enpassantTarget {
@@ -585,7 +623,7 @@ class BoardNode: SKNode {
 
                     let piece = pieceMapping[String(char)]!
                     pieces[rank, file] = piece
-                    let sprite = pieceSprite(for: piece)!
+                    let sprite = pieceSprite(for: piece)
                     let (pieceName, color) = pieceDesc(for: piece)
                     sprite.name = "piece:\(pieceName),\(color)"
                     addChild(sprite)

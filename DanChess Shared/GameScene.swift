@@ -8,12 +8,12 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+final class GameScene: SKScene {
 
-    fileprivate var board: BoardNode!
-    fileprivate var selectedPiece: SKNode?
-    fileprivate var selectedPieceStartUIPosition: CGPoint?
-    fileprivate var selectedPieceStartBoardPosition: Position?
+    private var board: BoardNode!
+    private var selectedPiece: SKNode?
+    private var selectedPieceStartUIPosition: CGPoint?
+    private var selectedPieceStartBoardPosition: Position?
 
     class func newGameScene() -> GameScene {
         // Load 'GameScene.sks' as an SKScene.
@@ -26,9 +26,10 @@ class GameScene: SKScene {
     }
     
     func setUpScene() {
-        board = BoardNode(frame: self.frame, fenString: "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        board = BoardNode(frame: self.frame, fenString: "rnb1kbnr/pp1P1ppp/8/q1p1p3/8/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
         addChild(board)
         board.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
+        board.delegate = self
     }
 
     override func didMove(to view: SKView) {
@@ -37,6 +38,41 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+    }
+}
+
+//TODODB: Add callbacks for selections?
+class PromotionUI: SKNode {
+    var pieces = [SKSpriteNode]()
+    let strokeSize = 3.0
+    init(color: TeamColor, position: Position, board: BoardNode) {
+        super.init()
+        pieces.append(pieceSprite(for: [.bishop, color.toPieceColor()]))
+        pieces.append(pieceSprite(for: [.knight, color.toPieceColor()]))
+        pieces.append(pieceSprite(for: [.rook,   color.toPieceColor()]))
+        pieces.append(pieceSprite(for: [.queen,  color.toPieceColor()]))
+
+        //TODODB: Fix this up
+        let spriteSize = 90.0
+
+        // background
+        let width = strokeSize * 2 + spriteSize * Double(pieces.count)
+        let height = strokeSize * 2 + spriteSize
+        let background = SKShapeNode(rectOf: CGSize(width: width, height: height))
+        background.fillColor = SKColor._dbcolor(red: 1.0, green: 0, blue: 0)
+        background.strokeColor = SKColor._dbcolor(red: 0, green: 0, blue: 0)
+
+        //TODODB: Add sprites here
+
+        self.addChild(background)
+    }
+
+    required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
+}
+
+extension GameScene: BoardDelegate {
+    func playerPromotingPawn(at position: Position) {
+        //TODODB: draw selection UI
     }
 }
 
@@ -64,11 +100,29 @@ extension GameScene {
 // Mouse-based event handling
 extension GameScene {
 
+    //TODODB: Remove once the UI is in place
+    override func keyUp(with event: NSEvent) {
+        guard case .keyUp = event.type else { return }
+        var piece: Piece? = nil
+        let color = board.turn.toPieceColor()
+        switch event.characters {
+            case "q": piece = [.queen, color]
+            case "b": piece = [.bishop, color]
+            case "n": piece = [.knight, color]
+            case "r": piece = [.rook, color]
+            default: return
+        }
+        guard let piece else { return }
+        board.choosePromotionPiece(piece)
+    }
+
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
         let firstTouchedNode = atPoint(location)
         let boardPoint = event.location(in: board)
         if let position = board.position(forUIPosition: boardPoint) {
+            // Bail if we are promoting a piece
+            guard case .regular = board.gameMode else { return }
             board.displayPossibleMoves(forPieceAt: position)
             if board.canPickupPiece(at: position) && firstTouchedNode.name?.starts(with: "piece") ?? false {
                 selectedPiece = firstTouchedNode
@@ -91,10 +145,10 @@ extension GameScene {
             if board.canMove(from: startBoardPos, to: nextBoardPos) {
                 // make move
                 board.makeMove(from: startBoardPos, to: nextBoardPos)
-                selectedPiece?.run(SKAction.move(to: board.uiPosition(forBoardPosition: nextBoardPos), duration: 0.1))
+                selectedPiece?.run(.move(to: board.uiPosition(forBoardPosition: nextBoardPos), duration: 0.1))
             } else {
                 // animate back to starting point
-                selectedPiece?.run(SKAction.move(to: startPoint, duration: 0.3))
+                selectedPiece?.run(.move(to: startPoint, duration: 0.3))
             }
         }
         selectedPiece = nil
