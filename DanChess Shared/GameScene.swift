@@ -45,6 +45,7 @@ final class GameScene: SKScene {
 class PromotionUI: SKNode {
     var pieces = [SKSpriteNode]()
     let strokeSize = 3.0
+
     init(color: TeamColor, position: Position, board: BoardNode) {
         super.init()
         pieces.append(pieceSprite(for: [.bishop, color.toPieceColor()]))
@@ -52,19 +53,26 @@ class PromotionUI: SKNode {
         pieces.append(pieceSprite(for: [.rook,   color.toPieceColor()]))
         pieces.append(pieceSprite(for: [.queen,  color.toPieceColor()]))
 
-        //TODODB: Fix this up
-        let spriteSize = 90.0
+        let spriteSize = pieces[0].size.width
+        name = "promotion"
+        zPosition = 100
 
         // background
         let width = strokeSize * 2 + spriteSize * Double(pieces.count)
         let height = strokeSize * 2 + spriteSize
         let background = SKShapeNode(rectOf: CGSize(width: width, height: height))
-        background.fillColor = SKColor._dbcolor(red: 1.0, green: 0, blue: 0)
+        background.fillColor = SKColor._dbcolor(red: 205/255, green: 87/255, blue: 87/255)
         background.strokeColor = SKColor._dbcolor(red: 0, green: 0, blue: 0)
-
-        //TODODB: Add sprites here
-
+        background.lineWidth = 2.0
         self.addChild(background)
+
+        // pieces
+        var xOffset = -((width / 2.0) - spriteSize / 2.0)
+        for piece in pieces {
+            piece.position = CGPoint(x: xOffset, y: strokeSize)
+            background.addChild(piece)
+            xOffset += spriteSize
+        }
     }
 
     required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
@@ -73,6 +81,9 @@ class PromotionUI: SKNode {
 extension GameScene: BoardDelegate {
     func playerPromotingPawn(at position: Position) {
         //TODODB: draw selection UI
+        let promotionUI = PromotionUI(color: board.turn, position: position, board: board)
+        promotionUI.position = board.uiPosition(forBoardPosition: position)
+        board.addChild(promotionUI)
     }
 }
 
