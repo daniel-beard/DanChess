@@ -147,6 +147,10 @@ enum TeamColor: Int {
         }
     }
 
+    func toPieceColor() -> Piece {
+        self == .white ? Piece.white : Piece.black
+    }
+
     func toggle() -> TeamColor {
         return self == .white ? .black : .white
     }
@@ -166,7 +170,7 @@ func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
     return (pieceName, color)
 }
 
-func pieceSprite(for piece: Piece) -> SKSpriteNode? {
+func pieceSprite(for piece: Piece) -> SKSpriteNode {
     let (pieceName, color) = pieceDesc(for: piece)
     return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
 }
