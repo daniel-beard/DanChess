@@ -174,28 +174,32 @@ class BoardNode: SKNode {
     // This lets us walk forward in time to check future moves.
     public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
         // Find the king
-        let pieceColor = teamColor == .white ? Piece.white : Piece.black
-        let kingPiece = Piece([.king, pieceColor])
+        let kingColor = teamColor
+        let kingPiece = Piece([.king, kingColor.toPieceColor()])
         let king = pieces.firstPosition(ofPiece: kingPiece)!
 
-        // Attacking pieces:
+        // Attacking piece positions
         let attackingRooks = rookOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isRook(pieces[pos]) }
-        let attackingKnights = knightOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in isKnight(pieces[pos]) }
+        let attackingKnights = knightOffsets
+            .map { king.offset(by: $0.0, $0.1) }
+            .filter { pos in
+                guard let piece = pieces[pos] else { return false }
+                return isKnight(pos) && piece.color() != kingColor
+            }
         let attackingBishops = bishopOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isBishop(pieces[pos]) }
         let attackingQueens = queenOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isQueen(pieces[pos]) }
         let attackingKings = kingOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
             .compactMap { $0.last }.filter { pos in isKing(pieces[pos]) }
-        let pawnOffsets = pieceColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
+        let pawnOffsets = kingColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
         let attackingPawns = pawnOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
             .compactMap { $0.last }.filter { pos in
-                return isPawn(pieces[pos])
+                isPawn(pieces[pos])
             }
 
-        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
+        let attackingPieces: [Position] = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
             .flatMap { $0 }.compactMap { $0 }
 
         if overlayAttackingPieces {
