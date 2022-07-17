@@ -163,11 +163,24 @@ class BoardNode: SKNode {
     }
 
     public func removeNode(at position: Position?) {
-        if let position = position {
-            self.nodes(at: uiPosition(forBoardPosition: position))
-                .filter { $0.name?.starts(with: "piece") ?? false }
-                .forEach { $0.removeFromParent() }
-        }
+        guard let position else { return }
+        self.nodes(at: uiPosition(forBoardPosition: position))
+            .filter { $0.name?.starts(with: "piece") ?? false }
+            .forEach { $0.removeFromParent() }
+    }
+
+    public func replace(piece: Piece, at position: Position?) {
+        guard let position else { return }
+        // Remove existing piece
+        pieces[position] = nil
+        removeNode(at: position)
+
+        // Insert chosen piece
+        pieces[position] = piece
+        let sprite = piece.sprite()
+        sprite.name = piece.spriteName()
+        addChild(sprite)
+        sprite.position = uiPosition(forBoardPosition: position)
     }
 
     // Calculate if the king is in check for a particular color and board node.
@@ -234,20 +247,11 @@ class BoardNode: SKNode {
             return
         }
         // Remove existing piece
-        pieces[position] = nil
         removeExistingMoveOverlays()
-        self.nodes(at: uiPosition(forBoardPosition: position))
-            .filter { $0.name?.starts(with: "piece") ?? false }
-            .forEach { $0.removeFromParent() }
+        removeNode(at: position)
 
         // Insert chosen piece
-        // TODODB: Should generalize / factor this piece out
-        pieces[position] = piece
-        let sprite = pieceSprite(for: piece)
-        let (pieceName, color) = pieceDesc(for: piece)
-        sprite.name = "piece:\(pieceName),\(color)"
-        addChild(sprite)
-        sprite.position = uiPosition(forBoardPosition: position)
+        replace(piece: piece, at: position)
 
         // Finally, we aren't promoting a piece any more
         gameMode = .regular
@@ -627,11 +631,7 @@ class BoardNode: SKNode {
 
                     let piece = pieceMapping[String(char)]!
                     pieces[rank, file] = piece
-                    let sprite = pieceSprite(for: piece)
-                    let (pieceName, color) = pieceDesc(for: piece)
-                    sprite.name = "piece:\(pieceName),\(color)"
-                    addChild(sprite)
-                    sprite.position = uiPosition(forBoardPosition: Position(rank, file))
+                    replace(piece: piece, at: Position(rank, file))
 
                     file = (file + 1) ?? .a
                 case .activeColor:

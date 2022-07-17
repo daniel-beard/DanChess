@@ -16,7 +16,6 @@ final class GameScene: SKScene {
     private var selectedPieceStartBoardPosition: Position?
 
     class func newGameScene() -> GameScene {
-        // Load 'GameScene.sks' as an SKScene.
         guard let scene = SKScene(fileNamed: "GameScene") as? GameScene else {
             print("Failed to load GameScene.sks")
             abort()
@@ -35,53 +34,14 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         self.setUpScene()
     }
-    
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
-    }
-}
-
-//TODODB: Add callbacks for selections?
-class PromotionUI: SKNode {
-    var pieces = [SKSpriteNode]()
-    let strokeSize = 3.0
-
-    init(color: TeamColor, position: Position, board: BoardNode) {
-        super.init()
-        pieces.append(pieceSprite(for: [.bishop, color.toPieceColor()]))
-        pieces.append(pieceSprite(for: [.knight, color.toPieceColor()]))
-        pieces.append(pieceSprite(for: [.rook,   color.toPieceColor()]))
-        pieces.append(pieceSprite(for: [.queen,  color.toPieceColor()]))
-
-        let spriteSize = pieces[0].size.width
-        name = "promotion"
-        zPosition = 100
-
-        // background
-        let width = strokeSize * 2 + spriteSize * Double(pieces.count)
-        let height = strokeSize * 2 + spriteSize
-        let background = SKShapeNode(rectOf: CGSize(width: width, height: height))
-        background.fillColor = SKColor._dbcolor(red: 205/255, green: 87/255, blue: 87/255)
-        background.strokeColor = SKColor._dbcolor(red: 0, green: 0, blue: 0)
-        background.lineWidth = 2.0
-        self.addChild(background)
-
-        // pieces
-        var xOffset = -((width / 2.0) - spriteSize / 2.0)
-        for piece in pieces {
-            piece.position = CGPoint(x: xOffset, y: strokeSize)
-            background.addChild(piece)
-            xOffset += spriteSize
-        }
-    }
-
-    required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
 }
 
 extension GameScene: BoardDelegate {
     func playerPromotingPawn(at position: Position) {
-        //TODODB: draw selection UI
-        let promotionUI = PromotionUI(color: board.turn, position: position, board: board)
+        let promotionUI = PromotionUI(color: board.turn, position: position, board: board, onPieceSelection: { piece in
+            self.board.replace(piece: piece, at: position)
+            self.board.gameMode = .regular
+        })
         promotionUI.position = board.uiPosition(forBoardPosition: position)
         board.addChild(promotionUI)
     }
@@ -102,30 +62,12 @@ extension GameScene {
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
     }
-    
-   
 }
 #endif
 
 #if os(OSX)
 // Mouse-based event handling
 extension GameScene {
-
-    //TODODB: Remove once the UI is in place
-    override func keyUp(with event: NSEvent) {
-        guard case .keyUp = event.type else { return }
-        var piece: Piece? = nil
-        let color = board.turn.toPieceColor()
-        switch event.characters {
-            case "q": piece = [.queen, color]
-            case "b": piece = [.bishop, color]
-            case "n": piece = [.knight, color]
-            case "r": piece = [.rook, color]
-            default: return
-        }
-        guard let piece else { return }
-        board.choosePromotionPiece(piece)
-    }
 
     override func mouseDown(with event: NSEvent) {
         let location = event.location(in: self)
@@ -166,7 +108,5 @@ extension GameScene {
         selectedPieceStartBoardPosition = nil
         selectedPieceStartUIPosition = nil
     }
-
 }
 #endif
-

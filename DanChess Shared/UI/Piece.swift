@@ -11,7 +11,7 @@ import SpriteKit
 
 struct Piece: OptionSet, CustomDebugStringConvertible {
     var debugDescription: String {
-        let (pieceName, color) = pieceDesc(for: self)
+        let (pieceName, color) = pieceDesc()
         return "\(pieceName), \(color)"
     }
 
@@ -54,6 +54,30 @@ struct Piece: OptionSet, CustomDebugStringConvertible {
         else if self.contains(.queen)   { result = "q" }
         else if self.contains(.king)    { result = "k" }
         return color() == .white ? result.uppercased() : result
+    }
+
+    func pieceDesc() -> (pieceName: String, color: String) {
+        var pieceName = ""
+        var color = ""
+        if contains(.white)   { color = "White" }
+        if contains(.black)   { color = "Black" }
+        if contains(.pawn)    { pieceName = "Pawn" }
+        if contains(.rook)    { pieceName = "Rook" }
+        if contains(.knight)  { pieceName = "Knight" }
+        if contains(.bishop)  { pieceName = "Bishop" }
+        if contains(.queen)   { pieceName = "Queen" }
+        if contains(.king)    { pieceName = "King" }
+        return (pieceName, color)
+    }
+
+    func sprite() -> SKSpriteNode {
+        let (pieceName, color) = pieceDesc()
+        return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
+    }
+
+    func spriteName() -> String {
+        let (pieceName, color) = pieceDesc()
+        return "piece:\(pieceName)\(color)"
     }
 }
 
@@ -154,25 +178,6 @@ enum TeamColor: Int {
     func toggle() -> TeamColor {
         return self == .white ? .black : .white
     }
-}
-
-func pieceDesc(for piece: Piece) -> (pieceName: String, color: String) {
-    var pieceName = ""
-    var color = ""
-    if piece.contains(.white)   { color = "White" }
-    if piece.contains(.black)   { color = "Black" }
-    if piece.contains(.pawn)    { pieceName = "Pawn" }
-    if piece.contains(.rook)    { pieceName = "Rook" }
-    if piece.contains(.knight)  { pieceName = "Knight" }
-    if piece.contains(.bishop)  { pieceName = "Bishop" }
-    if piece.contains(.queen)   { pieceName = "Queen" }
-    if piece.contains(.king)    { pieceName = "King" }
-    return (pieceName, color)
-}
-
-func pieceSprite(for piece: Piece) -> SKSpriteNode {
-    let (pieceName, color) = pieceDesc(for: piece)
-    return SKSpriteNode(imageNamed: "\(pieceName)\(color)")
 }
 
 struct Position: Equatable {
