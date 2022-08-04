@@ -41,8 +41,9 @@ extension GameScene: BoardDelegate {
         let promotionUI = PromotionUI(color: board.turn, position: position, board: board, onPieceSelection: { piece in
             self.board.replace(piece: piece, at: position)
             self.board.gameMode = .regular
+            self.board.turn = self.board.turn.toggle()
         })
-        promotionUI.position = board.uiPosition(forBoardPosition: position)
+        promotionUI.setPosition(forPosition: position)
         board.addChild(promotionUI)
     }
 }

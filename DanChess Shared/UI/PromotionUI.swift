@@ -14,15 +14,17 @@ class PromotionUI: SKShapeNode {
     var pieceLookup = [String: Piece]()
     let color: TeamColor
     let strokeSize = 3.0
+    let backgroundHeight: CGFloat
+
+    private var triangleIndicator: SKShapeNode?
+    weak var board: BoardNode?
 
     override var isUserInteractionEnabled: Bool {
-        set { }
-        get { true }
+        set { } get { true }
     }
 
     override var name: String? {
-        set { }
-        get { "promotion" }
+        set { } get { "promotion" }
     }
 
     let pieceSelection: (Piece) -> ()
@@ -32,9 +34,9 @@ class PromotionUI: SKShapeNode {
          board: BoardNode,
          onPieceSelection: @escaping (Piece) -> ()) {
 
+        self.board = board
         self.color = color
         pieceSelection = onPieceSelection
-        super.init()
         pieces = [
             [.bishop, color.toPieceColor()],
             [.knight, color.toPieceColor()],
@@ -43,19 +45,38 @@ class PromotionUI: SKShapeNode {
         ]
 
         let spriteSize = pieces[0].sprite().size.width
-        zPosition = 100
 
         // background
-        let width = strokeSize * 2 + spriteSize * Double(pieces.count)
-        let height = strokeSize * 2 + spriteSize
-        let background = SKShapeNode(rectOf: CGSize(width: width, height: height))
-        background.fillColor = SKColor._dbcolor(red: 205/255, green: 87/255, blue: 87/255)
-        background.strokeColor = SKColor._dbcolor(red: 0, green: 0, blue: 0)
+        let backgroundWidth = strokeSize * 2 + spriteSize * Double(pieces.count)
+        backgroundHeight = strokeSize * 2 + spriteSize
+
+        super.init()
+
+        zPosition = 100
+
+        let background = SKShapeNode(rectOf: CGSize(width: backgroundWidth, height: backgroundHeight))
+        background.fillColor = promotionFillColor
+        background.strokeColor = promotionStrokeColor
         background.lineWidth = 2.0
         self.addChild(background)
 
+        // tail
+        let tailSize: CGFloat = 10
+        let halfTailSize = tailSize / 2
+        var points = [CGPoint(x:tailSize, y:-tailSize / 2.0),
+                      CGPoint(x:-tailSize, y:-tailSize / 2.0),
+                      CGPoint(x: 0.0, y: tailSize),
+                      CGPoint(x:tailSize, y:-tailSize / 2.0)]
+        let triangle = SKShapeNode(points: &points, count: points.count)
+        triangle.fillColor = promotionFillColor
+        triangle.strokeColor = promotionStrokeColor
+        triangle.lineWidth = 2
+        triangle.position = CGPointMake(self.frame.midX, (backgroundHeight / 2) + halfTailSize)
+        self.addChild(triangle)
+        self.triangleIndicator = triangle
+
         // pieces
-        var xOffset = -((width / 2.0) - spriteSize / 2.0)
+        var xOffset = -((backgroundWidth / 2.0) - spriteSize / 2.0)
         for piece in pieces {
             let sprite = piece.sprite()
             sprite.position = CGPoint(x: xOffset, y: strokeSize)
@@ -66,6 +87,36 @@ class PromotionUI: SKShapeNode {
 
             pieceLookup[piece.spriteName()] = piece
         }
+    }
+
+    func setPosition(forPosition position: Position) {
+        guard let board else { return }
+        let boardSquareSize = CGFloat(board.squareSize)
+        var newPosition: CGPoint
+        var indicatorOffset: CGFloat = 0
+        // Edge two files just use the next neighbor for position of overall promotion UI
+        switch position.file {
+            case .a:
+                newPosition = board.uiPosition(forBoardPosition: Position(position.rank, .b))
+                indicatorOffset = -boardSquareSize
+            case .h:
+                newPosition = board.uiPosition(forBoardPosition: Position(position.rank, .g))
+                indicatorOffset = boardSquareSize
+            default: newPosition = board.uiPosition(forBoardPosition: position)
+        }
+
+        // Need to flip triangle indicator when rank is 1
+        if position.rank == .one {
+            let tailSize: CGFloat = 10
+            triangleIndicator?.zRotation = .pi
+            triangleIndicator?.position.y -= backgroundHeight + tailSize
+            newPosition.y += (boardSquareSize / 2) + tailSize
+        } else {
+            newPosition.y -= boardSquareSize / 2
+        }
+
+        self.triangleIndicator?.position.x += indicatorOffset
+        self.position = newPosition
     }
 
     // MARK: Touch / Click handling
@@ -95,12 +146,8 @@ class PromotionUI: SKShapeNode {
         pieceSelection(piece)
     }
 
-    override func mouseDragged(with event: NSEvent) {
-    }
-
-    override func mouseUp(with event: NSEvent) {
-    }
+    override func mouseDragged(with event: NSEvent) { }
+    override func mouseUp(with event: NSEvent) { }
 #endif
-
     required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
 }

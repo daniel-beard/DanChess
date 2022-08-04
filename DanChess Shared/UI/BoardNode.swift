@@ -47,7 +47,6 @@ class BoardNode: SKNode {
         if let fenString = fenString {
             setupPieces(with: fenString)
         }
-        print("FEN: rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
         print("FEN: \(fenForCurrentBoard())")
     }
     required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
@@ -57,8 +56,6 @@ class BoardNode: SKNode {
         // just for testing
         fenstrings()
 
-        let light = SKColor._dbcolor(red: 235/255, green: 235/255, blue: 185/255)
-        let dark = SKColor._dbcolor(red: 175/255, green: 135/255, blue: 105/255)
         for file in 0..<8 {
             for rank in 0..<8 {
                 let square = SKShapeNode(rect:
@@ -66,7 +63,7 @@ class BoardNode: SKNode {
                            y: rank * squareSize,
                            width: squareSize,
                            height: squareSize))
-                square.fillColor = (file + rank) % 2 != 0 ? light : dark
+                square.fillColor = (file + rank) % 2 != 0 ? boardSquareLight : boardSquareDark
                 square.isUserInteractionEnabled = false
                 addChild(square)
                 squares[rank, file] = square
@@ -118,8 +115,7 @@ class BoardNode: SKNode {
     private func moveOverlaySprite() -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
         square.name = "overlay"
-        let color = SKColor._dbcolor(red: 190/255, green: 37/255, blue: 109/255)
-        square.fillColor = color
+        square.fillColor = moveOverlayColor
         return square
     }
 
@@ -219,7 +215,7 @@ class BoardNode: SKNode {
             let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
             for p in overlayPositions {
                 let sprite = moveOverlaySprite()
-                sprite.fillColor = SKColor._dbcolor(red: 255/255, green: 165/255, blue: 0/255)
+                sprite.fillColor = attackOverlayColor
                 sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
                                           y: (p.rank.rawValue - 1) * squareSize)
                 squaresOverlay[p] = sprite
@@ -276,6 +272,7 @@ class BoardNode: SKNode {
                 case (.white, .eight): fallthrough
                 case (.black, .one):
                     gameMode = .promotion(end)
+                    removeNode(at: end)
                     delegate?.playerPromotingPawn(at: end)
                     return
                 default: break
