@@ -8,10 +8,13 @@
 
 import SpriteKit
 
+protocol BoardDelegate: AnyObject {
+    func playerPromotingPawn(at: Position)
+}
+
 enum GameMode {
     case regular
-    case whitePawnPromotion
-    case blackPawnPromotion
+    case promotion(Position)
 }
 
 /// Board SKNode and game logic
@@ -22,8 +25,9 @@ class BoardNode: SKNode {
     private var pieces = Array2D<Piece>(size: 8, defaultValues: nil)
     let squareSize: Int
 
-    //TODODB: This isn't implemented right now. Use this to implement promotion
     var gameMode: GameMode = .regular
+
+    weak var delegate: BoardDelegate?
 
     /// Game Properties
     var turn: TeamColor = .white
@@ -43,7 +47,6 @@ class BoardNode: SKNode {
         if let fenString = fenString {
             setupPieces(with: fenString)
         }
-        print("FEN: rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
         print("FEN: \(fenForCurrentBoard())")
     }
     required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
@@ -53,8 +56,6 @@ class BoardNode: SKNode {
         // just for testing
         fenstrings()
 
-        let light = SKColor._dbcolor(red: 235/255, green: 235/255, blue: 185/255)
-        let dark = SKColor._dbcolor(red: 175/255, green: 135/255, blue: 105/255)
         for file in 0..<8 {
             for rank in 0..<8 {
                 let square = SKShapeNode(rect:
@@ -62,7 +63,7 @@ class BoardNode: SKNode {
                            y: rank * squareSize,
                            width: squareSize,
                            height: squareSize))
-                square.fillColor = (file + rank) % 2 != 0 ? light : dark
+                square.fillColor = (file + rank) % 2 != 0 ? boardSquareLight : boardSquareDark
                 square.isUserInteractionEnabled = false
                 addChild(square)
                 squares[rank, file] = square
@@ -114,8 +115,7 @@ class BoardNode: SKNode {
     private func moveOverlaySprite() -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
         square.name = "overlay"
-        let color = SKColor._dbcolor(red: 190/255, green: 37/255, blue: 109/255)
-        square.fillColor = color
+        square.fillColor = moveOverlayColor
         return square
     }
 
@@ -148,6 +148,8 @@ class BoardNode: SKNode {
     }
 
     public func canPickupPiece(at pos: Position) -> Bool {
+        // Can't make any other moves while choosing a promotion piece
+        if case .promotion(_) = gameMode { return false }
         return pieces[pos]?.color() == turn
     }
 
@@ -157,46 +159,63 @@ class BoardNode: SKNode {
     }
 
     public func removeNode(at position: Position?) {
-        if let position = position {
-            self.nodes(at: uiPosition(forBoardPosition: position))
-                .filter { $0.name?.starts(with: "piece") ?? false }
-                .forEach { $0.removeFromParent() }
-        }
+        guard let position else { return }
+        self.nodes(at: uiPosition(forBoardPosition: position))
+            .filter { $0.name?.starts(with: "piece") ?? false }
+            .forEach { $0.removeFromParent() }
+    }
+
+    public func replace(piece: Piece, at position: Position?) {
+        guard let position else { return }
+        // Remove existing piece
+        pieces[position] = nil
+        removeNode(at: position)
+
+        // Insert chosen piece
+        pieces[position] = piece
+        let sprite = piece.sprite()
+        sprite.name = piece.spriteName()
+        addChild(sprite)
+        sprite.position = uiPosition(forBoardPosition: position)
     }
 
     // Calculate if the king is in check for a particular color and board node.
     // This lets us walk forward in time to check future moves.
     public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
         // Find the king
-        let pieceColor = teamColor == .white ? Piece.white : Piece.black
-        let kingPiece = Piece([.king, pieceColor])
+        let kingColor = teamColor
+        let kingPiece = Piece([.king, kingColor.toPieceColor()])
         let king = pieces.firstPosition(ofPiece: kingPiece)!
 
-        // Attacking pieces:
+        // Attacking piece positions
         let attackingRooks = rookOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isRook(pieces[pos]) }
-        let attackingKnights = knightOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
-            .compactMap { $0.last }.filter { pos in isKnight(pieces[pos]) }
+        let attackingKnights = knightOffsets
+            .map { king.offset(by: $0.0, $0.1) }
+            .filter { pos in
+                guard let piece = pieces[pos] else { return false }
+                return isKnight(pos) && piece.color() != kingColor
+            }
         let attackingBishops = bishopOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isBishop(pieces[pos]) }
         let attackingQueens = queenOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isQueen(pieces[pos]) }
         let attackingKings = kingOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
             .compactMap { $0.last }.filter { pos in isKing(pieces[pos]) }
-        let pawnOffsets = pieceColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
+        let pawnOffsets = kingColor == .white ? whiteKingAttackingPawnOffsets : blackKingAttackingPawnOffsets
         let attackingPawns = pawnOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1) }
             .compactMap { $0.last }.filter { pos in
-                return isPawn(pieces[pos])
+                isPawn(pieces[pos])
             }
 
-        let attackingPieces = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
+        let attackingPieces: [Position] = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
             .flatMap { $0 }.compactMap { $0 }
 
         if overlayAttackingPieces {
             let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
             for p in overlayPositions {
                 let sprite = moveOverlaySprite()
-                sprite.fillColor = SKColor._dbcolor(red: 255/255, green: 165/255, blue: 0/255)
+                sprite.fillColor = attackOverlayColor
                 sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
                                           y: (p.rank.rawValue - 1) * squareSize)
                 squaresOverlay[p] = sprite
@@ -204,16 +223,34 @@ class BoardNode: SKNode {
             }
         }
 
-        print("=============================================")
         print("\(teamColor.stringValue) king is at: \(king)")
         print("Attacking rooks: \(attackingRooks)")
         print("Attacking knights: \(attackingKnights)")
         print("Attacking bishops: \(attackingBishops)")
         print("Attacking queens: \(attackingQueens)")
         print("Attacking kings: \(attackingKings)")
-
         print("FEN for current board: \(fenForCurrentBoard())")
+        print("=============================================")
         return true
+    }
+
+    public func choosePromotionPiece(_ piece: Piece)  {
+        guard case .promotion(let position) = gameMode else { return }
+        guard isKnight(piece)
+                || isQueen(piece)
+                || isBishop(piece)
+                || isRook(piece) else {
+            return
+        }
+        // Remove existing piece
+        removeExistingMoveOverlays()
+        removeNode(at: position)
+
+        // Insert chosen piece
+        replace(piece: piece, at: position)
+
+        // Finally, we aren't promoting a piece any more
+        gameMode = .regular
     }
 
     public func makeMove(from start: Position, to end: Position) {
@@ -227,17 +264,23 @@ class BoardNode: SKNode {
         let piece = pieces[start]
         pieces[end] = piece
         pieces[start] = nil
-        turn = moveColor.toggle()
         removeExistingMoveOverlays()
 
-        // Promotion TODODB:
+        // Promotion
         if isPawn(piece) {
             switch (piece?.color(), end.rank) {
-            case (.white, .eight): break
-            case (.black, .one): break
-            default: break
+                case (.white, .eight): fallthrough
+                case (.black, .one):
+                    gameMode = .promotion(end)
+                    removeNode(at: end)
+                    delegate?.playerPromotingPawn(at: end)
+                    return
+                default: break
             }
         }
+
+        // Set next turn
+        defer { turn = moveColor.toggle() }
 
         // Handle enpassant
         if isPawn(piece) && end == enpassantTarget {
@@ -585,11 +628,7 @@ class BoardNode: SKNode {
 
                     let piece = pieceMapping[String(char)]!
                     pieces[rank, file] = piece
-                    let sprite = pieceSprite(for: piece)!
-                    let (pieceName, color) = pieceDesc(for: piece)
-                    sprite.name = "piece:\(pieceName),\(color)"
-                    addChild(sprite)
-                    sprite.position = uiPosition(forBoardPosition: Position(rank, file))
+                    replace(piece: piece, at: Position(rank, file))
 
                     file = (file + 1) ?? .a
                 case .activeColor:

@@ -8,15 +8,14 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+final class GameScene: SKScene {
 
-    fileprivate var board: BoardNode!
-    fileprivate var selectedPiece: SKNode?
-    fileprivate var selectedPieceStartUIPosition: CGPoint?
-    fileprivate var selectedPieceStartBoardPosition: Position?
+    private var board: BoardNode!
+    private var selectedPiece: SKNode?
+    private var selectedPieceStartUIPosition: CGPoint?
+    private var selectedPieceStartBoardPosition: Position?
 
     class func newGameScene() -> GameScene {
-        // Load 'GameScene.sks' as an SKScene.
         guard let scene = SKScene(fileNamed: "GameScene") as? GameScene else {
             print("Failed to load GameScene.sks")
             abort()
@@ -26,17 +25,26 @@ class GameScene: SKScene {
     }
     
     func setUpScene() {
-        board = BoardNode(frame: self.frame, fenString: "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        board = BoardNode(frame: self.frame, fenString: "rnb1kbnr/pp1P1ppp/8/q1p1p3/8/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
         addChild(board)
         board.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
+        board.delegate = self
     }
 
     override func didMove(to view: SKView) {
         self.setUpScene()
     }
-    
-    override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+}
+
+extension GameScene: BoardDelegate {
+    func playerPromotingPawn(at position: Position) {
+        let promotionUI = PromotionUI(color: board.turn, position: position, board: board, onPieceSelection: { piece in
+            self.board.replace(piece: piece, at: position)
+            self.board.gameMode = .regular
+            self.board.turn = self.board.turn.toggle()
+        })
+        promotionUI.setPosition(forPosition: position)
+        board.addChild(promotionUI)
     }
 }
 
@@ -55,8 +63,6 @@ extension GameScene {
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
     }
-    
-   
 }
 #endif
 
@@ -69,6 +75,8 @@ extension GameScene {
         let firstTouchedNode = atPoint(location)
         let boardPoint = event.location(in: board)
         if let position = board.position(forUIPosition: boardPoint) {
+            // Bail if we are promoting a piece
+            guard case .regular = board.gameMode else { return }
             board.displayPossibleMoves(forPieceAt: position)
             if board.canPickupPiece(at: position) && firstTouchedNode.name?.starts(with: "piece") ?? false {
                 selectedPiece = firstTouchedNode
@@ -91,17 +99,15 @@ extension GameScene {
             if board.canMove(from: startBoardPos, to: nextBoardPos) {
                 // make move
                 board.makeMove(from: startBoardPos, to: nextBoardPos)
-                selectedPiece?.run(SKAction.move(to: board.uiPosition(forBoardPosition: nextBoardPos), duration: 0.1))
+                selectedPiece?.run(.move(to: board.uiPosition(forBoardPosition: nextBoardPos), duration: 0.1))
             } else {
                 // animate back to starting point
-                selectedPiece?.run(SKAction.move(to: startPoint, duration: 0.3))
+                selectedPiece?.run(.move(to: startPoint, duration: 0.3))
             }
         }
         selectedPiece = nil
         selectedPieceStartBoardPosition = nil
         selectedPieceStartUIPosition = nil
     }
-
 }
 #endif
-
