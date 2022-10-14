@@ -71,7 +71,7 @@ class PromotionUI: SKShapeNode {
         triangle.fillColor = promotionFillColor
         triangle.strokeColor = promotionStrokeColor
         triangle.lineWidth = 2
-        triangle.position = CGPointMake(self.frame.midX, (backgroundHeight / 2) + halfTailSize)
+        triangle.position = CGPoint(x: frame.midX, y: (backgroundHeight / 2) + halfTailSize)
         self.addChild(triangle)
         self.triangleIndicator = triangle
 

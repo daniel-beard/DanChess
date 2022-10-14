@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Array2D<T: Equatable> {
+struct Array2D<T: Equatable> {
 
     // Size in one dimension. E.g. size = 8 implies a 2D array of 8x8
     var size: Int

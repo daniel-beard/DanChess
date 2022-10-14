@@ -1,16 +1,14 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "SwiftParsec",
-        "repositoryURL": "git@github.com:davedufresne/SwiftParsec.git",
-        "state": {
-          "branch": "master",
-          "revision": "f230fa8b2e221bebb837a316ddaf5573d74ba822",
-          "version": null
-        }
+  "pins" : [
+    {
+      "identity" : "swiftparsec",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:davedufresne/SwiftParsec.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "f230fa8b2e221bebb837a316ddaf5573d74ba822"
       }
-    ]
-  },
-  "version": 1
+    }
+  ],
+  "version" : 2
 }

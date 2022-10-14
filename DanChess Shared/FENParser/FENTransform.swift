@@ -86,7 +86,7 @@ extension FENParts {
 // White pieces are uppercase, black pieces lowercase
 //    rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 func placementsFromChars(_ chars: [[Character]]) throws -> Array2D<Piece> {
-    let pieces = Array2D<Piece>(size: 8, defaultValues: nil)
+    var pieces = Array2D<Piece>(size: 8, defaultValues: nil)
     var rank = Rank.eight
     var file = File.a
 
