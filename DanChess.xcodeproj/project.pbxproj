@@ -30,8 +30,8 @@
 		2486F63D262D154300648688 /* BoardNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63B262D154300648688 /* BoardNode.swift */; };
 		2486F63F262D193600648688 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63E262D193600648688 /* Array2D.swift */; };
 		2486F640262D193600648688 /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F63E262D193600648688 /* Array2D.swift */; };
-		2486F6422634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
-		2486F6432634E1FD00648688 /* Piece.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* Piece.swift */; };
+		2486F6422634E1FD00648688 /* BoardTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* BoardTypes.swift */; };
+		2486F6432634E1FD00648688 /* BoardTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6412634E1FD00648688 /* BoardTypes.swift */; };
 		2486F6482636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
 		2486F6492636660500648688 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2486F6472636660500648688 /* Extensions.swift */; };
 		24E03DF226B7344A0045B49E /* FENTransform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24E03DF126B7344A0045B49E /* FENTransform.swift */; };
@@ -73,7 +73,7 @@
 		2486F629262D13F900648688 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2486F63B262D154300648688 /* BoardNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardNode.swift; sourceTree = "<group>"; };
 		2486F63E262D193600648688 /* Array2D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
-		2486F6412634E1FD00648688 /* Piece.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Piece.swift; sourceTree = "<group>"; };
+		2486F6412634E1FD00648688 /* BoardTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTypes.swift; sourceTree = "<group>"; };
 		2486F6472636660500648688 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		24E03DF126B7344A0045B49E /* FENTransform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENTransform.swift; sourceTree = "<group>"; };
 		2B0E57A12883A31300B725B2 /* PromotionUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromotionUI.swift; sourceTree = "<group>"; };
@@ -190,8 +190,8 @@
 			isa = PBXGroup;
 			children = (
 				2486F63B262D154300648688 /* BoardNode.swift */,
+				2486F6412634E1FD00648688 /* BoardTypes.swift */,
 				2486F63E262D193600648688 /* Array2D.swift */,
-				2486F6412634E1FD00648688 /* Piece.swift */,
 				2486F6472636660500648688 /* Extensions.swift */,
 				2B2A8E28273787E5005C58CC /* Constants.swift */,
 				2B0E57A12883A31300B725B2 /* PromotionUI.swift */,
@@ -354,7 +354,7 @@
 				2B0E57A22883A31300B725B2 /* PromotionUI.swift in Sources */,
 				2486F63C262D154300648688 /* BoardNode.swift in Sources */,
 				2486F62E262D13F900648688 /* GameScene.swift in Sources */,
-				2486F6422634E1FD00648688 /* Piece.swift in Sources */,
+				2486F6422634E1FD00648688 /* BoardTypes.swift in Sources */,
 				2486F614262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F612262D13F900648688 /* AppDelegate.swift in Sources */,
 				2B2A8E29273787E5005C58CC /* Constants.swift in Sources */,
@@ -372,7 +372,7 @@
 				2B0E57A32883A31300B725B2 /* PromotionUI.swift in Sources */,
 				2486F63D262D154300648688 /* BoardNode.swift in Sources */,
 				2486F62F262D13F900648688 /* GameScene.swift in Sources */,
-				2486F6432634E1FD00648688 /* Piece.swift in Sources */,
+				2486F6432634E1FD00648688 /* BoardTypes.swift in Sources */,
 				2486F625262D13F900648688 /* GameViewController.swift in Sources */,
 				2486F623262D13F900648688 /* AppDelegate.swift in Sources */,
 				2B2A8E2A273787E5005C58CC /* Constants.swift in Sources */,

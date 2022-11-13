@@ -17,6 +17,13 @@ enum GameMode {
     case promotion(Position)
 }
 
+struct Features {
+    /// Overlay attacking pieces when a player is in check
+    static let overlayAttacking = true
+    /// Overlay possible moves for a selected piece
+    static let overlayPossibleMoves = true
+}
+
 /// Board SKNode and game logic
 class BoardNode: SKNode {
 
@@ -48,6 +55,7 @@ class BoardNode: SKNode {
             setupPieces(with: fenString)
         }
         print("FEN: \(fenForCurrentBoard())")
+        overlayAttackingPiecesForCurrentBoard()
     }
     required init?(coder aDecoder: NSCoder) { fatalError("Not implemented") }
 
@@ -59,10 +67,10 @@ class BoardNode: SKNode {
         for file in 0..<8 {
             for rank in 0..<8 {
                 let square = SKShapeNode(rect:
-                    CGRect(x: file * squareSize,
-                           y: rank * squareSize,
-                           width: squareSize,
-                           height: squareSize))
+                                            CGRect(x: file * squareSize,
+                                                   y: rank * squareSize,
+                                                   width: squareSize,
+                                                   height: squareSize))
                 square.fillColor = (file + rank) % 2 != 0 ? boardSquareLight : boardSquareDark
                 square.isUserInteractionEnabled = false
                 addChild(square)
@@ -112,23 +120,36 @@ class BoardNode: SKNode {
         CGPoint(x: (pos.file.rawValue - 1) * squareSize + squareSize / 2, y: (pos.rank.rawValue - 1) * squareSize + squareSize / 2)
     }
 
-    private func moveOverlaySprite() -> SKShapeNode {
+    private func overlaySprite(withName name: String) -> SKShapeNode {
         let square = SKShapeNode(rect: CGRect(origin: .zero, size: .of(squareSize)))
-        square.name = "overlay"
+        square.name = name
         square.fillColor = moveOverlayColor
+        square.isUserInteractionEnabled = false
         return square
     }
 
-    private func removeExistingMoveOverlays() {
-        enumerateChildNodes(withName: "overlay") { (node, stop) in
+    private func removeExistingOverlays(ofName name: String) {
+        enumerateChildNodes(withName: name) { (node, stop) in
             node.removeFromParent()
         }
         // reset overlays array
+        squaresOverlay.matrix = squaresOverlay.matrix.map { maybeNode in
+            maybeNode?.name == name ? maybeNode : nil
+        }
+    }
+
+    private func removeAllOverlays() {
+        for overlayNode in squaresOverlay.matrix {
+            overlayNode?.removeFromParent()
+        }
         squaresOverlay = Array2D<SKShapeNode>(size: 8, defaultValues: nil)
     }
 
     public func displayPossibleMoves(forPieceAt position: Position) {
-        removeExistingMoveOverlays()
+        guard Features.overlayPossibleMoves else { return }
+        let overlayName = "possibleMoveOverlay"
+
+        removeExistingOverlays(ofName: overlayName)
 
         // if it's not this colors turn, skip generating the moves
         if pieces[position]?.color() != turn {
@@ -139,7 +160,25 @@ class BoardNode: SKNode {
 
         // add new overlays
         for p in possibles {
-            let sprite = moveOverlaySprite()
+            let sprite = overlaySprite(withName: overlayName)
+            sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
+                                      y: (p.rank.rawValue - 1) * squareSize)
+            squaresOverlay[p] = sprite
+            addChild(sprite)
+        }
+    }
+
+    public func overlayAttackingPiecesForCurrentBoard() {
+        guard Features.overlayAttacking else { return }
+        let overlayName = "attackingPiecesOverlay"
+
+        removeExistingOverlays(ofName: overlayName)
+
+        let check = Self.inCheck(pieces: self.pieces, teamColor: self.turn)
+        let overlayPositions = check.attackingPieces.isEmpty ? [] : check.attackingPieces.appending(check.king)
+        for p in overlayPositions {
+            let sprite = overlaySprite(withName: overlayName)
+            sprite.fillColor = attackOverlayColor
             sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
                                       y: (p.rank.rawValue - 1) * squareSize)
             squaresOverlay[p] = sprite
@@ -175,13 +214,14 @@ class BoardNode: SKNode {
         pieces[position] = piece
         let sprite = piece.sprite()
         sprite.name = piece.spriteName()
+        sprite.zPosition = 300
         addChild(sprite)
         sprite.position = uiPosition(forBoardPosition: position)
     }
 
     // Calculate if the king is in check for a particular color and board node.
     // This lets us walk forward in time to check future moves.
-    public class func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
+    public class func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor) -> CheckResult {
         // Find the king
         let kingColor = teamColor
         let kingPiece = Piece([.king, kingColor.toPieceColor()])
@@ -211,29 +251,21 @@ class BoardNode: SKNode {
         let attackingPieces: [Position] = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
             .flatMap { $0 }.compactMap { $0 }
 
-        //TODO: Move this, can't have this since it's a class method now
-//        if overlayAttackingPieces {
-//            let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
-//            for p in overlayPositions {
-//                let sprite = moveOverlaySprite()
-//                sprite.fillColor = attackOverlayColor
-//                sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
-//                                          y: (p.rank.rawValue - 1) * squareSize)
-//                squaresOverlay[p] = sprite
-//                addChild(sprite)
-//            }
-//        }
+        // Set to output debug logs
+        let debugAttacking = false
+        { debug in
+            if debug {
+                print("\(teamColor.stringValue) king is at: \(king)")
+                print("Attacking rooks: \(attackingRooks)")
+                print("Attacking knights: \(attackingKnights)")
+                print("Attacking bishops: \(attackingBishops)")
+                print("Attacking queens: \(attackingQueens)")
+                print("Attacking kings: \(attackingKings)")
+                print("=============================================")
+            }
+        }(debugAttacking)
 
-        print("\(teamColor.stringValue) king is at: \(king)")
-        print("Attacking rooks: \(attackingRooks)")
-        print("Attacking knights: \(attackingKnights)")
-        print("Attacking bishops: \(attackingBishops)")
-        print("Attacking queens: \(attackingQueens)")
-        print("Attacking kings: \(attackingKings)")
-        //TODO: Move this
-//        print("FEN for current board: \(fenForCurrentBoard())")
-        print("=============================================")
-        return attackingPieces.count > 0
+        return CheckResult(teamColor: teamColor, inCheck: attackingPieces.count > 0, king: king, attackingPieces: attackingPieces)
     }
 
     public func choosePromotionPiece(_ piece: Piece)  {
@@ -245,7 +277,7 @@ class BoardNode: SKNode {
             return
         }
         // Remove existing piece
-        removeExistingMoveOverlays()
+        removeAllOverlays()
         removeNode(at: position)
 
         // Insert chosen piece
@@ -266,7 +298,7 @@ class BoardNode: SKNode {
         let piece = pieces[start]
         pieces[end] = piece
         pieces[start] = nil
-        removeExistingMoveOverlays()
+        removeAllOverlays()
 
         // Promotion
         if isPawn(piece) {
@@ -281,8 +313,11 @@ class BoardNode: SKNode {
             }
         }
 
-        // Set next turn
-        defer { turn = moveColor.toggle() }
+        // Set next turn, overlay check
+        defer {
+            turn = moveColor.toggle()
+            overlayAttackingPiecesForCurrentBoard()
+        }
 
         // Handle enpassant
         if isPawn(piece) && end == enpassantTarget {
@@ -425,7 +460,7 @@ class BoardNode: SKNode {
                         let intermediate = Position(.one, .d)
                         if !Self.inCheck(
                                 pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
-                                teamColor: currColor) {
+                                teamColor: currColor).inCheck {
                             moves.append(Position(.one, .c))
                         }
                     }
@@ -434,7 +469,7 @@ class BoardNode: SKNode {
                         let intermediate = Position(.one, .f)
                         if !Self.inCheck(
                                 pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
-                                teamColor: currColor) {
+                                teamColor: currColor).inCheck {
                             moves.append(Position(.one, .g))
                         }
                     }
@@ -447,7 +482,7 @@ class BoardNode: SKNode {
                         let intermediate = Position(.eight, .d)
                         if !Self.inCheck(
                                 pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
-                                teamColor: currColor) {
+                                teamColor: currColor).inCheck {
                             moves.append(Position(.eight, .c))
                         }
                     }
@@ -456,7 +491,7 @@ class BoardNode: SKNode {
                         let intermediate = Position(.eight, .f)
                         if !Self.inCheck(
                                 pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
-                                teamColor: currColor) {
+                                teamColor: currColor).inCheck {
                             moves.append(Position(.eight, .g))
                         }
                     }
@@ -473,7 +508,7 @@ class BoardNode: SKNode {
         for move in concreteMoves {
             let inCheck = Self.inCheck(
                 pieces: playForward(startPosition: pos, move: move, piece: piece),
-                teamColor: currColor)
+                teamColor: currColor).inCheck
             print("inCheck? \(move.rank) \(move.file) \(piece) - \(inCheck)")
             if !inCheck {
                 finalMoves.append(move)

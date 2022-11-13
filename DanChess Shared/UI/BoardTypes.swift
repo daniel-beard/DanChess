@@ -221,3 +221,15 @@ struct Position: Equatable {
         return nil
     }
 }
+
+/// Data about a check
+struct CheckResult {
+    /// Team color that was checked for check
+    var teamColor: TeamColor
+    /// Whether the teamColor is in check
+    var inCheck: Bool
+    /// Position of the attacked king
+    var king: Position
+    /// Positions of all pieces causing the check
+    var attackingPieces: [Position]
+}
