@@ -109,7 +109,7 @@ class BoardNode: SKNode {
     }
 
     public func uiPosition(forBoardPosition pos: Position) -> CGPoint {
-        return CGPoint(x: (pos.file.rawValue - 1) * squareSize + squareSize / 2, y: (pos.rank.rawValue - 1) * squareSize + squareSize / 2)
+        CGPoint(x: (pos.file.rawValue - 1) * squareSize + squareSize / 2, y: (pos.rank.rawValue - 1) * squareSize + squareSize / 2)
     }
 
     private func moveOverlaySprite() -> SKShapeNode {
@@ -181,7 +181,7 @@ class BoardNode: SKNode {
 
     // Calculate if the king is in check for a particular color and board node.
     // This lets us walk forward in time to check future moves.
-    public func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
+    public class func inCheck(pieces: Array2D<Piece>, teamColor: TeamColor, overlayAttackingPieces: Bool = true) -> Bool {
         // Find the king
         let kingColor = teamColor
         let kingPiece = Piece([.king, kingColor.toPieceColor()])
@@ -194,7 +194,7 @@ class BoardNode: SKNode {
             .map { king.offset(by: $0.0, $0.1) }
             .filter { pos in
                 guard let piece = pieces[pos] else { return false }
-                return isKnight(pos) && piece.color() != kingColor
+                return isKnight(pieces: pieces, pos) && piece.color() != kingColor
             }
         let attackingBishops = bishopOffsets.map { ray(from: king, in: pieces, rankOffset: $0.0, fileOffset: $0.1) }
             .compactMap { $0.last }.filter { pos in isBishop(pieces[pos]) }
@@ -211,17 +211,18 @@ class BoardNode: SKNode {
         let attackingPieces: [Position] = [attackingRooks, attackingKnights, attackingBishops, attackingQueens, attackingKings, attackingPawns]
             .flatMap { $0 }.compactMap { $0 }
 
-        if overlayAttackingPieces {
-            let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
-            for p in overlayPositions {
-                let sprite = moveOverlaySprite()
-                sprite.fillColor = attackOverlayColor
-                sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
-                                          y: (p.rank.rawValue - 1) * squareSize)
-                squaresOverlay[p] = sprite
-                addChild(sprite)
-            }
-        }
+        //TODO: Move this, can't have this since it's a class method now
+//        if overlayAttackingPieces {
+//            let overlayPositions: [Position] = attackingPieces.isEmpty ? [] : attackingPieces.appending(king)
+//            for p in overlayPositions {
+//                let sprite = moveOverlaySprite()
+//                sprite.fillColor = attackOverlayColor
+//                sprite.position = CGPoint(x: (p.file.rawValue - 1) * squareSize,
+//                                          y: (p.rank.rawValue - 1) * squareSize)
+//                squaresOverlay[p] = sprite
+//                addChild(sprite)
+//            }
+//        }
 
         print("\(teamColor.stringValue) king is at: \(king)")
         print("Attacking rooks: \(attackingRooks)")
@@ -229,9 +230,10 @@ class BoardNode: SKNode {
         print("Attacking bishops: \(attackingBishops)")
         print("Attacking queens: \(attackingQueens)")
         print("Attacking kings: \(attackingKings)")
-        print("FEN for current board: \(fenForCurrentBoard())")
+        //TODO: Move this
+//        print("FEN for current board: \(fenForCurrentBoard())")
         print("=============================================")
-        return true
+        return attackingPieces.count > 0
     }
 
     public func choosePromotionPiece(_ piece: Piece)  {
@@ -329,7 +331,7 @@ class BoardNode: SKNode {
         }
 
         //TODODB: Debug only
-        let _ = inCheck(pieces: pieces, teamColor: turn)
+        let _ = Self.inCheck(pieces: pieces, teamColor: turn)
     }
 
     private func castleRookMove(start: Position, end: Position) {
@@ -341,9 +343,13 @@ class BoardNode: SKNode {
         node.position = uiPosition(forBoardPosition: end)
     }
 
-    //TODO: Naive implementation of possible moves, I need to take into account that if a piece moves that causes check, it's invalid.
-    //TODO: An approach here would be to 'paint' the lines of check onces per move
-    // That way, we'll save on some of the calculations like for the kings moves or check calculations
+    public func playForward(startPosition: Position, move: Position, piece: Piece) -> Array2D<Piece> {
+        var currPieces = self.pieces
+        currPieces[move.rank, move.file] = piece
+        currPieces[startPosition.rank, startPosition.file] = nil
+        return currPieces
+    }
+
     public func possibleMoves(forPieceAt pos: Position) -> [Position] {
 
         // Get the piece, if there isn't one, there are no moves to return
@@ -351,7 +357,7 @@ class BoardNode: SKNode {
         let white = piece.contains(.white)
         let currColor = piece.color()
 
-        var moves: [Position?] = []
+        var moves = [Position?]()
 
         // Now we need to define some types of moves per piece type
         // remember, some pieces can only move in certain directions per color.
@@ -385,13 +391,10 @@ class BoardNode: SKNode {
             if let enpassantTarget = enpassantTarget, [forwardLeft, forwardRight].contains(enpassantTarget) {
                 moves.append(enpassantTarget == forwardLeft ? forwardLeft : forwardRight)
             }
-            //TODO Exchange pieces
-            //TODO Check
         } else if piece.contains(.rook) {
             moves.append(contentsOf: rookOffsets.map {
-                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
+                Self.ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
-            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.knight) {
             moves.append(contentsOf: knightOffsets.map {
                 if let next = pos.offset(by: $0.0, $0.1), pieces[next]?.color() != currColor {
@@ -399,32 +402,41 @@ class BoardNode: SKNode {
                 }
                 return nil
             })
-            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.bishop) {
             moves.append(contentsOf: bishopOffsets.map {
-                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
+                Self.ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
-            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.queen) {
             moves.append(contentsOf: queenOffsets.map {
-                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
+                Self.ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1)
             }.flatMap { $0 })
-            //TODO: discard any that would cause our king to be in check
         } else if piece.contains(.king) {
             moves.append(contentsOf: kingOffsets.map {
-                ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
+                Self.ray(from: pos, in: pieces, rankOffset: $0.0, fileOffset: $0.1, maxLength: 1)
             }.flatMap{ $0 })
             // Handle castling
+            // There's a special case here, we need to check the intermediate castling moves.
+            // If an intermediate move is in check, then that castling operation is invalid.
             if turn == .white {
                 let kingHome = Position(.one, .e)
                 if pos == kingHome {
                     // Can castle queenside if no one on d1 or c1 and eligible
                     if whiteCanCastleQueenside && pieces[.one, .d] == nil && pieces[.one, .c] == nil {
-                        moves.append(Position(.one, .c))
+                        let intermediate = Position(.one, .d)
+                        if !Self.inCheck(
+                                pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
+                                teamColor: currColor) {
+                            moves.append(Position(.one, .c))
+                        }
                     }
                     // Can castle kingside if no one on f1 or g1 and eligible
                     if whiteCanCastleKingside && pieces[.one, .f] == nil && pieces[.one, .g] == nil {
-                        moves.append(Position(.one, .g))
+                        let intermediate = Position(.one, .f)
+                        if !Self.inCheck(
+                                pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
+                                teamColor: currColor) {
+                            moves.append(Position(.one, .g))
+                        }
                     }
                 }
             } else {
@@ -432,25 +444,42 @@ class BoardNode: SKNode {
                 if pos == kingHome {
                     // Can castle queenside if no one on d8 or c8 and eligible
                     if blackCanCastleQueenside && pieces[.eight, .d] == nil && pieces[.eight, .c] == nil {
-                        moves.append(Position(.eight, .c))
+                        let intermediate = Position(.eight, .d)
+                        if !Self.inCheck(
+                                pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
+                                teamColor: currColor) {
+                            moves.append(Position(.eight, .c))
+                        }
                     }
                     // Can castle kingside if no one on f8 or g8 and eligible
                     if blackCanCastleKingside && pieces[.eight, .f] == nil && pieces[.eight, .g] == nil {
-                        moves.append(Position(.eight, .g))
+                        let intermediate = Position(.eight, .f)
+                        if !Self.inCheck(
+                                pieces: playForward(startPosition: pos, move: intermediate, piece: piece),
+                                teamColor: currColor) {
+                            moves.append(Position(.eight, .g))
+                        }
                     }
                 }
             }
-
-            // We can move anywhere that doesn't take us into check
-            // TODO
         }
 
-        // TODO: Create a new array with existing possible moves (culling nil values)
-        // Add the extra squares that castling would traverse
-        // Play forward in all cases, remove the values that would take us into check
-        // Return values - extra castling squares
+        // Remove nil moves
+        let concreteMoves = moves.compactMap { $0 }
 
-        return moves.compactMap { $0 }
+        // For each potential move, play it, see if that would take us into check
+        // This doesn't handle the intermediate castling positions, those are handled above.
+        var finalMoves = [Position]()
+        for move in concreteMoves {
+            let inCheck = Self.inCheck(
+                pieces: playForward(startPosition: pos, move: move, piece: piece),
+                teamColor: currColor)
+            print("inCheck? \(move.rank) \(move.file) \(piece) - \(inCheck)")
+            if !inCheck {
+                finalMoves.append(move)
+            }
+        }
+        return finalMoves
     }
 
     /** Returns potential moves as an array along a movement line 'offset'
@@ -462,7 +491,7 @@ class BoardNode: SKNode {
         @param fileOffset: file component of the offset movement line we are walking.
         @param maxLength: Set to a smaller value to control the maximum movement line length
     */
-    private func ray(from position: Position, in pieceArray: Array2D<Piece>, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
+    private class func ray(from position: Position, in pieceArray: Array2D<Piece>, rankOffset: Int, fileOffset: Int, maxLength: Int = Int.max) -> [Position?] {
         let ourColor = pieceArray[position]?.color()
         var line = [Position]()
         var currPos = position
@@ -483,19 +512,38 @@ class BoardNode: SKNode {
         return line
     }
 
-    private func isRook(_ piece: Piece?) -> Bool { piece?.contains(.rook) ?? false }
-    private func isRook(_ pos: Position?) -> Bool { pieces[pos]?.contains(.rook) ?? false }
-    private func isKnight(_ piece: Piece?) -> Bool { piece?.contains(.knight) ?? false }
-    private func isKnight(_ pos: Position?) -> Bool { pieces[pos]?.contains(.knight) ?? false }
-    private func isBishop(_ piece: Piece?) -> Bool { piece?.contains(.bishop) ?? false }
-    private func isBishop(_ pos: Position?) -> Bool { pieces[pos]?.contains(.bishop) ?? false }
-    private func isQueen(_ piece: Piece?) -> Bool { piece?.contains(.queen) ?? false }
-    private func isQueen(_ pos: Position?) -> Bool { pieces[pos]?.contains(.queen) ?? false }
-    private func isKing(_ piece: Piece?) -> Bool { piece?.contains(.king) ?? false }
-    private func isKing(_ pos: Position?) -> Bool { pieces[pos]?.contains(.king) ?? false }
-    private func isPawn(_ piece: Piece?) -> Bool { piece?.contains(.pawn) ?? false }
-    private func isPawn(_ pos: Position?) -> Bool { pieces[pos]?.contains(.pawn) ?? false }
-    private func isEmpty(_ pos: Position?) -> Bool { pieces[pos] == nil }
+    private func isRook(_ piece: Piece?)    -> Bool { Self.isRook(piece) }
+    private func isRook(_ pos: Position?)   -> Bool { Self.isRook(pieces: self.pieces, pos) }
+    private class func isRook(_ piece: Piece?)    -> Bool { piece?.contains(.rook) ?? false }
+    private class func isRook(pieces: Array2D<Piece>, _ pos: Position?)   -> Bool { pieces[pos]?.contains(.rook) ?? false }
+
+    private func isKnight(_ piece: Piece?)  -> Bool { Self.isKnight(piece) }
+    private func isKnight(_ pos: Position?) -> Bool { Self.isKnight(pieces: self.pieces, pos) }
+    private class func isKnight(_ piece: Piece?)  -> Bool { piece?.contains(.knight) ?? false }
+    private class func isKnight(pieces: Array2D<Piece>, _ pos: Position?) -> Bool { pieces[pos]?.contains(.knight) ?? false }
+
+    private func isBishop(_ piece: Piece?)  -> Bool { Self.isBishop(piece) }
+    private func isBishop(_ pos: Position?) -> Bool { Self.isBishop(pieces: self.pieces, pos) }
+    private class func isBishop(_ piece: Piece?)  -> Bool { piece?.contains(.bishop) ?? false }
+    private class func isBishop(pieces: Array2D<Piece>, _ pos: Position?) -> Bool { pieces[pos]?.contains(.bishop) ?? false }
+
+    private func isQueen(_ piece: Piece?)   -> Bool { Self.isQueen(piece) }
+    private func isQueen(_ pos: Position?)  -> Bool { Self.isQueen(pieces: self.pieces, pos) }
+    private class func isQueen(_ piece: Piece?)   -> Bool { piece?.contains(.queen) ?? false }
+    private class func isQueen(pieces: Array2D<Piece>, _ pos: Position?)  -> Bool { pieces[pos]?.contains(.queen) ?? false }
+
+    private func isKing(_ piece: Piece?)    -> Bool { Self.isKing(piece) }
+    private func isKing(_ pos: Position?)   -> Bool { Self.isKing(pieces: self.pieces, pos)}
+    private class func isKing(_ piece: Piece?)    -> Bool { piece?.contains(.king) ?? false }
+    private class func isKing(pieces: Array2D<Piece>, _ pos: Position?)   -> Bool { pieces[pos]?.contains(.king) ?? false }
+
+    private func isPawn(_ piece: Piece?)    -> Bool { Self.isPawn(piece) }
+    private func isPawn(_ pos: Position?)   -> Bool { Self.isPawn(pieces: self.pieces, pos) }
+    private class func isPawn(_ piece: Piece?)    -> Bool { piece?.contains(.pawn) ?? false }
+    private class func isPawn(pieces: Array2D<Piece>, _ pos: Position?)   -> Bool { pieces[pos]?.contains(.pawn) ?? false }
+
+    private func isEmpty(_ pos: Position?)  -> Bool { pieces[pos] == nil }
+    private class func isEmpty(pieces: Array2D<Piece>, _ pos: Position?)  -> Bool { pieces[pos] == nil }
 
     func fenForCurrentBoard() -> String {
         var components = [String]()

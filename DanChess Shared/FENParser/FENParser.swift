@@ -31,7 +31,7 @@ import SwiftParsec
 func pure<A>(_ result: A) -> GenericParser<String, (), A> { GenericParser(result: result) }
 
 public struct FENParts {
-    //MARK: Raw parser values
+    // MARK: Raw parser values
     let piecePlacement: [[Character]]
     let activeColor: TeamColor
     let castlingAvailability: [Character]
@@ -39,7 +39,7 @@ public struct FENParts {
     let halfmoveClock: Int?
     let fullmoveClock: Int?
 
-    //MARK: Transformed values
+    // MARK: Transformed values
     var transformedPieces: Array2D<Piece>?
     var whiteCanCastleQueenside = false
     var whiteCanCastleKingside = false

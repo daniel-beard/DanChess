@@ -41,6 +41,7 @@
 		2B2A8E29273787E5005C58CC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2A8E28273787E5005C58CC /* Constants.swift */; };
 		2B2A8E2A273787E5005C58CC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2A8E28273787E5005C58CC /* Constants.swift */; };
 		2B9E47442734C0D6006C9B82 /* FENValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9E47432734C0D6006C9B82 /* FENValidationTests.swift */; };
+		2BD973C828F9F09E00F70021 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BD973C728F9F09E00F70021 /* SpriteKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +80,7 @@
 		2B2A8E28273787E5005C58CC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		2B9E47412734C0D6006C9B82 /* DanChessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DanChessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B9E47432734C0D6006C9B82 /* FENValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENValidationTests.swift; sourceTree = "<group>"; };
+		2BD973C728F9F09E00F70021 /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = System/Library/Frameworks/SpriteKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BD973C828F9F09E00F70021 /* SpriteKit.framework in Frameworks */,
 				242821B4266DD0C800EE2BCD /* SwiftParsec in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -111,6 +114,7 @@
 		242C109E26B7593C005BE4B5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2BD973C728F9F09E00F70021 /* SpriteKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -552,6 +556,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -571,6 +578,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -589,7 +599,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = macosx;
@@ -609,7 +619,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = macosx;
@@ -632,7 +642,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.danielbeard.DanChessTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -658,7 +668,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.3;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = io.danielbeard.DanChessTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
