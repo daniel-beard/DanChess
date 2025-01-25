@@ -209,7 +209,7 @@ struct Position: Equatable {
     }
 
     func toFen() -> String {
-        return "\(file.algebraicNotation)\(rank.algebraicNotation)"
+        "\(rank.algebraicNotation)\(file.algebraicNotation)"
     }
 
     // Create new position by adding offsets to current rank & file values.

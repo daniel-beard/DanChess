@@ -21,6 +21,7 @@ let blackKingAttackingPawnOffsets = [(-1,-1),(-1,1)]
 let whiteKingAttackingPawnOffsets = [(1,-1),(1,1)]
 
 let validPiecePlacementChars = "RrNnBbQqKkpP"
+let START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 // MARK: Colors
 

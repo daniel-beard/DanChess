@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -41,6 +41,7 @@
 		2B2A8E29273787E5005C58CC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2A8E28273787E5005C58CC /* Constants.swift */; };
 		2B2A8E2A273787E5005C58CC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2A8E28273787E5005C58CC /* Constants.swift */; };
 		2B9E47442734C0D6006C9B82 /* FENValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9E47432734C0D6006C9B82 /* FENValidationTests.swift */; };
+		2BB3D65A2D446CD000CD85D8 /* app_icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2BB3D6592D446CD000CD85D8 /* app_icon.icns */; };
 		2BD973C828F9F09E00F70021 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BD973C728F9F09E00F70021 /* SpriteKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +81,7 @@
 		2B2A8E28273787E5005C58CC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		2B9E47412734C0D6006C9B82 /* DanChessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DanChessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B9E47432734C0D6006C9B82 /* FENValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FENValidationTests.swift; sourceTree = "<group>"; };
+		2BB3D6592D446CD000CD85D8 /* app_icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app_icon.icns; sourceTree = "<group>"; };
 		2BD973C728F9F09E00F70021 /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = System/Library/Frameworks/SpriteKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -178,6 +180,7 @@
 		2486F621262D13F900648688 /* DanChess macOS */ = {
 			isa = PBXGroup;
 			children = (
+				2BB3D6592D446CD000CD85D8 /* app_icon.icns */,
 				2486F622262D13F900648688 /* AppDelegate.swift */,
 				2486F624262D13F900648688 /* GameViewController.swift */,
 				2486F626262D13F900648688 /* Main.storyboard */,
@@ -330,6 +333,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BB3D65A2D446CD000CD85D8 /* app_icon.icns in Resources */,
 				2486F628262D13F900648688 /* Main.storyboard in Resources */,
 				2486F62D262D13F900648688 /* GameScene.sks in Resources */,
 				2486F631262D13F900648688 /* Assets.xcassets in Resources */,
@@ -599,7 +603,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = macosx;
@@ -619,7 +623,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				PRODUCT_BUNDLE_IDENTIFIER = io.dbeard.DanChess;
 				PRODUCT_NAME = DanChess;
 				SDKROOT = macosx;

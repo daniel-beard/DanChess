@@ -24,6 +24,8 @@ struct Features {
     static let overlayPossibleMoves = true
 }
 
+// checkmate: rnk3nr/ppR3pp/3Q4/2N5/q4p1P/3P4/P1P2PP1/RNB1KB2 b Q - 1 2
+
 /// Board SKNode and game logic
 class BoardNode: SKNode {
 
@@ -46,12 +48,12 @@ class BoardNode: SKNode {
     var halfMoveClock = 0
     var fullMoveClock = 0
 
-    init(frame: CGRect, fenString: String? = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+    init(frame: CGRect, fenString: String? = START_FEN) {
         self.squareSize = Int(min(frame.size.width, frame.size.height) / 8)
         super.init()
         setupSquares()
         //TODO: Replace this with the parser combinator approach
-        if let fenString = fenString {
+        if let fenString {
             setupPieces(with: fenString)
         }
         print("FEN: \(fenForCurrentBoard())")
@@ -509,7 +511,6 @@ class BoardNode: SKNode {
             let inCheck = Self.inCheck(
                 pieces: playForward(startPosition: pos, move: move, piece: piece),
                 teamColor: currColor).inCheck
-            print("inCheck? \(move.rank) \(move.file) \(piece) - \(inCheck)")
             if !inCheck {
                 finalMoves.append(move)
             }
@@ -623,7 +624,7 @@ class BoardNode: SKNode {
         }
 
         // Enpassant target square
-        if let enpassantTarget = enpassantTarget {
+        if let enpassantTarget {
             components.append(enpassantTarget.toFen())
         } else {
             components.append("-")

@@ -10,24 +10,26 @@ import SpriteKit
 
 final class GameScene: SKScene {
 
-    private var board: BoardNode!
+    var board: BoardNode!
+    private var startFEN: String = START_FEN
     private var selectedPiece: SKNode?
     private var selectedPieceStartUIPosition: CGPoint?
     private var selectedPieceStartBoardPosition: Position?
 
-    class func newGameScene() -> GameScene {
+    class func newGameScene(fen: String = START_FEN) -> GameScene {
         guard let scene = SKScene(fileNamed: "GameScene") as? GameScene else {
             print("Failed to load GameScene.sks")
             abort()
         }
+        scene.startFEN = fen
         scene.scaleMode = .aspectFill
         return scene
     }
     
     func setUpScene() {
-        board = BoardNode(frame: self.frame, fenString: "rnb1kbnr/pp1P1ppp/8/q1p1p3/8/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+        board = BoardNode(frame: frame, fenString: startFEN)
         addChild(board)
-        board.position = CGPoint(x: 0 - (self.frame.size.width / 2), y: 0 - (self.frame.size.height / 2))
+        board.position = CGPoint(x: 0 - (frame.size.width / 2), y: 0 - (frame.size.height / 2))
         board.delegate = self
     }
 
